@@ -8,7 +8,7 @@
 [![Hugging Face](https://img.shields.io/badge/huggingface-CoMLRL-yellow.svg)](https://huggingface.co/CoMLRL)
 [![arXiv](https://img.shields.io/badge/arXiv-2508.04652-b31b1b.svg)](https://arxiv.org/pdf/2508.04652)
 
-Improve LLM Collaboration with Multi-LLM Reinforcement Learning.
+Improve LLM Collaboration with Cooperative Multi-LLM Reinforcement Learning.
 
 ## Setup
 
@@ -16,7 +16,7 @@ Improve LLM Collaboration with Multi-LLM Reinforcement Learning.
 cd CoMLRL
 conda create -n comlrl python=3.10
 conda activate comlrl
-pip install -r requirements.txt
+pip install -r requirements.txt # torch must be compatible with device
 pip install -e .
 ```
 
@@ -27,7 +27,7 @@ See scripts in `examples/` for usage examples.
 ## Algorithms
 
 - **MAGRPO:** Multi-Agent Group-Relative Policy Optimization
-- More Algs coming soon!
+- More algs are coming soon!
 
 ## Contributors
 
