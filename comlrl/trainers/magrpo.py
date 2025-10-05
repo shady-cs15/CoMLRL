@@ -71,12 +71,6 @@ class MAGRPOConfig(TrainingArguments):
             "help": "Early stop a branch if mean reward at a node exceeds this threshold."
         },
     )
-    epsilon_clip: Optional[float] = field(
-        default=None,
-        metadata={
-            "help": "Optional clamp for advantages if used by downstream code.",
-        },
-    )
 
 
 class MAGRPOTrainer:
