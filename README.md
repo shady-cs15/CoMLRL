@@ -31,13 +31,13 @@ See scripts in `examples/` for usage examples.
 
 ## Environments
 
-- [LLM Collaboration for Code Generation](https://github.com/OpenMLRL/LLM_Collaboration_Code_Generation)
+- [Code Generation](https://github.com/OpenMLRL/LLM_Collaboration_Code_Generation)
   - MBPP
   - HumanEval
   - CoopHumanEval
-- [LLM Collaboration for Module Completion](https://github.com/OpenMLRL/LLM_Collaboration_Module_Completion)
+- [Code Completion](https://github.com/OpenMLRL/LLM_Collaboration_Module_Completion)
   - ClassEval
-- [LLM Collaboration for Software Engineering](https://github.com/OpenMLRL/LLM_Collaboration_Software_Engineering)
+- [Bug Fix](https://github.com/OpenMLRL/LLM_Collaboration_Software_Engineering)
 
 
 ## Contributors
