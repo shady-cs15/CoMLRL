@@ -26,7 +26,9 @@ See scripts in `examples/` for usage examples.
 
 ## Algorithms
 
-- **MAGRPO:** Multi-Agent Group-Relative Policy Optimization
+- **MAGRPO:** Multi-Agent (Dr.) Group-Relative Policy Optimization
+  $J(\theta_i) =\mathbb{E}_{\mathbf{o}_0 \sim \mathcal{D},\mathbf{h}^\mathcal{G} \sim \mathbf{\pi}_{\mathbf{\theta}}}
+    \Bigg [\frac{1}{|B|}\frac{1}{|\mathcal{G}|}\sum_{h_i^\mathcal{G} \in B}\sum_{g \in \mathcal{G}} \Big(R^{(g)}_t -\text{mean}(R^{\mathcal{G}}_t)\Big)\Bigg]$;
 - More algs are coming soon!
 
 ## Environments
