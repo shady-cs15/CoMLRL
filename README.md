@@ -26,7 +26,7 @@ See scripts in `examples/` for usage examples.
 
 ## Algorithms
 
-- **MAGRPO:** Multi-Agent (Dr.) Group-Relative Policy Optimization
+- **MAGRPO:** Multi-Agent Group-Relative Policy Optimization, credits to [GRPO](https://arxiv.org/pdf/2402.03300) and [Dr. GRPO](https://github.com/sail-sg/understand-r1-zero):
 
 $$
   J(\theta_i) = \mathbb{E}_{\mathbf{o}_0 \sim \mathcal{D}, \mathbf{h}^\mathcal{G} \sim \mathbf{\pi}_{\mathbf{\theta}}}
