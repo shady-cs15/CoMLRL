@@ -26,7 +26,7 @@ See scripts in `examples/` for usage examples.
 
 ## Algorithms
 
-- **MAGRPO:** Multi-Agent Group-Relative Policy Optimization, credits to [GRPO](https://arxiv.org/pdf/2402.03300) and [Dr. GRPO](https://arxiv.org/abs/2503.20783):
+- **MAGRPO:** Multi-Agent Group-Relative Policy Optimization, credits to [GRPO](https://arxiv.org/pdf/2402.03300),[Dr. GRPO](https://arxiv.org/abs/2503.20783), and [TreeRPO](https://arxiv.org/abs/2506.05183):
 
 $$
   J(\theta_i) = \mathbb{E}_{\mathbf{o}_0 \sim \mathcal{D}, \mathbf{h}^\mathcal{G} \sim \mathbf{\pi}_{\mathbf{\theta}}}
