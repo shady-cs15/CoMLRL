@@ -250,6 +250,18 @@ class MAGRPOTrainer:
         except Exception:
             pass
 
+        # Memory mode for multi-turn prompt composition and generation
+        self.memory_mode = "full"
+        try:
+            if isinstance(self.wandb_config, dict):
+                sections = self.wandb_config.get("config_sections", {})
+                if isinstance(sections, dict):
+                    ext = sections.get("external", {})
+                    if isinstance(ext, dict) and "memory_mode" in ext:
+                        self.memory_mode = str(ext.get("memory_mode", "full")).lower()
+        except Exception:
+            self.memory_mode = "full"
+
     def _setup_formatters(self, formatters, num_agents):
         """Set up format functions for each agent that can handle external transitions."""
         # Use multi-turn compatible default formatter that accepts external prompts
@@ -559,6 +571,11 @@ class MAGRPOTrainer:
 
         # Track the selected completions from the previous turn (evaluation traces a single path)
         previous_turn_completions = [None] * self.num_agents
+        # Track full history per agent for evaluation path
+        eval_prompt_history = [[] for _ in range(self.num_agents)]
+        eval_response_history = [[] for _ in range(self.num_agents)]
+        # Track KV caches per agent for memoryful mode
+        eval_kv_caches = [None for _ in range(self.num_agents)]
 
         # Run episode with configured number of turns
         for turn_idx in range(self.args.num_turns):
@@ -574,6 +591,11 @@ class MAGRPOTrainer:
                         prompt=batch_item.get("prompt", ""),
                         agent_completions=selected_prev,
                         num_agents=self.num_agents,
+                        prompt_history_per_agent=eval_prompt_history,
+                        response_history_per_agent=[
+                            list(eval_response_history[i]) + [selected_prev[i]]
+                            for i in range(self.num_agents)
+                        ],
                     )
 
                     # External transition should return prompts for each agent
@@ -597,9 +619,17 @@ class MAGRPOTrainer:
                     num_return_sequences=1,
                     max_new_tokens=self.args.max_new_tokens,
                     external_prompts=agent_external_prompts[agent_idx],
+                    kv_cache=(
+                        eval_kv_caches[agent_idx]
+                        if getattr(self, "memory_mode", "last") == "memoryful"
+                        else None
+                    ),
                 )
                 # Extract the completion directly
                 completion = agent_completions["completions"][0][0]
+                # Record prompt used this turn
+                used_prompt = agent_completions["prompts"][0]
+                eval_prompt_history[agent_idx].append(used_prompt)
                 agent_sample_completions[agent_idx].append(completion)
 
             # Compute immediate reward at this turn (single joint sample)
@@ -615,9 +645,17 @@ class MAGRPOTrainer:
                 eval_turn_rewards[turn_idx].append(float(rewards[0]))
                 # Update selected previous-turn completions for next-turn prompts
                 for agent_idx in range(self.num_agents):
-                    previous_turn_completions[agent_idx] = agent_sample_completions[
-                        agent_idx
-                    ][-1]
+                    chosen = agent_sample_completions[agent_idx][-1]
+                    previous_turn_completions[agent_idx] = chosen
+                    eval_response_history[agent_idx].append(chosen)
+                    # Update eval KV cache to the selected completion's terminal cache if present
+                    kv_list = agent_completions.get("kv_caches_after_completion")
+                    if (
+                        getattr(self, "memory_mode", "last") == "memoryful"
+                        and isinstance(kv_list, list)
+                        and len(kv_list) > 0
+                    ):
+                        eval_kv_caches[agent_idx] = kv_list[0]
 
         # Store completions for all agents
         for agent_idx in range(self.num_agents):
@@ -782,7 +820,13 @@ class MAGRPOTrainer:
         # No per-function accumulation in single reward mode
         turn_node_counts: List[int] = [0 for _ in range(num_turns)]
 
-        def build_node(turn_idx: int, prompts_per_agent=None):
+        def build_node(
+            turn_idx: int,
+            prompts_per_agent=None,
+            prompt_history_per_agent: Optional[List[List[str]]] = None,
+            response_history_per_agent: Optional[List[List[str]]] = None,
+            kv_caches_per_agent: Optional[List[Any]] = None,
+        ):
             comps_per_agent = []
             for agent_idx in range(self.num_agents):
                 comps = self._generate_completions_with_external_prompts(
@@ -794,6 +838,9 @@ class MAGRPOTrainer:
                     external_prompts=(
                         prompts_per_agent[agent_idx] if prompts_per_agent else None
                     ),
+                    kv_cache=(
+                        kv_caches_per_agent[agent_idx] if kv_caches_per_agent else None
+                    ),
                     **kwargs,
                 )
                 comps_per_agent.append(comps)
@@ -801,7 +848,25 @@ class MAGRPOTrainer:
             agent_completions_list = [
                 comps_per_agent[i]["completions"][0] for i in range(self.num_agents)
             ]
+            # Prompts actually used this turn, per agent (may differ across agents)
+            prompts_used_this_turn = [
+                comps_per_agent[i]["prompts"][0] for i in range(self.num_agents)
+            ]
             formatted_prompt = comps_per_agent[0]["prompts"][0]
+
+            # Initialize history containers if not provided
+            if prompt_history_per_agent is None:
+                prompt_history_per_agent = [[] for _ in range(self.num_agents)]
+            if response_history_per_agent is None:
+                response_history_per_agent = [[] for _ in range(self.num_agents)]
+            if kv_caches_per_agent is None:
+                kv_caches_per_agent = [None for _ in range(self.num_agents)]
+
+            # Extend prompt history with this turn's prompts
+            next_prompt_history = [
+                list(prompt_history_per_agent[i]) + [prompts_used_this_turn[i]]
+                for i in range(self.num_agents)
+            ]
             # Compute rewards per joint action depending on joint_mode
             joint_mode = str(getattr(self.args, "joint_mode", "aligned")).lower()
             rewards_vec: List[float] = []
@@ -894,10 +959,20 @@ class MAGRPOTrainer:
                         agent_completions_list[i][idx_tuple[i]]
                         for i in range(self.num_agents)
                     ]
+                    # Extend response history with selected completions on this branch
+                    next_response_history = [
+                        list(response_history_per_agent[i])
+                        + [agent_completions_list[i][idx_tuple[i]]]
+                        for i in range(self.num_agents)
+                    ]
+
                     child_prompts = self.external_transition(
                         prompt=batch_item.get("prompt", ""),
                         agent_completions=parent_joint,
                         num_agents=self.num_agents,
+                        # Full history along this branch up to (and including) this turn
+                        prompt_history_per_agent=next_prompt_history,
+                        response_history_per_agent=next_response_history,
                     )
                     if (
                         not isinstance(child_prompts, (list, tuple))
@@ -906,13 +981,37 @@ class MAGRPOTrainer:
                         raise ValueError(
                             "External transition must return per-agent prompts"
                         )
+                    # Prepare next-turn KV caches per agent using selected completion cache
+                    next_kv_caches = []
+                    for i in range(self.num_agents):
+                        sel_idx = idx_tuple[i]
+                        kv_list = comps_per_agent[i].get("kv_caches_after_completion")
+                        if (
+                            getattr(self, "memory_mode", "last") == "memoryful"
+                            and isinstance(kv_list, list)
+                            and sel_idx < len(kv_list)
+                        ):
+                            next_kv_caches.append(kv_list[sel_idx])
+                        else:
+                            next_kv_caches.append(None)
+
                     child = build_node(
-                        turn_idx + 1, prompts_per_agent=list(child_prompts)
+                        turn_idx + 1,
+                        prompts_per_agent=list(child_prompts),
+                        prompt_history_per_agent=next_prompt_history,
+                        response_history_per_agent=next_response_history,
+                        kv_caches_per_agent=next_kv_caches,
                     )
                     node["children"].append(child)
             return node
 
-        root = build_node(0, prompts_per_agent=None)
+        root = build_node(
+            0,
+            prompts_per_agent=None,
+            prompt_history_per_agent=[[] for _ in range(self.num_agents)],
+            response_history_per_agent=[[] for _ in range(self.num_agents)],
+            kv_caches_per_agent=[None for _ in range(self.num_agents)],
+        )
 
         def compute_returns(node):
             if not node["children"]:
@@ -1174,6 +1273,7 @@ class MAGRPOTrainer:
         num_return_sequences=1,
         max_new_tokens=128,
         external_prompts=None,
+        kv_cache=None,
         **kwargs,
     ):
         """
@@ -1182,7 +1282,6 @@ class MAGRPOTrainer:
 
         When num_turns=1 or external_prompts is None, behaves like _generate_completions.
         """
-
         # If single-turn or no external prompts, use standard method directly
         if self.args.num_turns == 1 or external_prompts is None:
             return self._generate_completions(
@@ -1194,8 +1293,9 @@ class MAGRPOTrainer:
                 **kwargs,
             )
 
-        # Multi-turn with external prompts: external modes return full prompts.
-        # Use them directly for this turn without invoking first-turn formatters.
+        # Multi-turn with external prompts: external modes return next-turn prompts.
+        # If memory_mode is 'memoryful', we will use KV-cache continuation instead of
+        # embedding history tokens. Otherwise, use the returned prompt text directly.
         prompts = [external_prompts for _ in batch_items]
 
         # Temporarily replace prompts in batch_items
@@ -1206,15 +1306,27 @@ class MAGRPOTrainer:
             modified_item["prompt"] = prompt
             modified_items.append(modified_item)
 
-        # Use _generate_completions with modified items
-        completions_data = self._generate_completions(
-            agent,
-            modified_items,
-            agent_idx=agent_idx,
-            num_return_sequences=num_return_sequences,
-            max_new_tokens=max_new_tokens,
-            **kwargs,
-        )
+        if getattr(self, "memory_mode", "last") == "memoryful":
+            # Generate using KV-cache continuation
+            completions_data = self._generate_completions_with_kv(
+                agent,
+                modified_items,
+                agent_idx=agent_idx,
+                num_return_sequences=num_return_sequences,
+                max_new_tokens=max_new_tokens,
+                base_kv_cache=kv_cache,
+                **kwargs,
+            )
+        else:
+            # Use _generate_completions with modified items
+            completions_data = self._generate_completions(
+                agent,
+                modified_items,
+                agent_idx=agent_idx,
+                num_return_sequences=num_return_sequences,
+                max_new_tokens=max_new_tokens,
+                **kwargs,
+            )
 
         # Restore original prompts in batch_items
         for i, item in enumerate(completions_data["batch_items"]):
@@ -1226,6 +1338,157 @@ class MAGRPOTrainer:
         completions_data["prompts"] = prompts
 
         return completions_data
+
+    def _generate_completions_with_kv(
+        self,
+        agent,
+        batch_items,
+        agent_idx=0,
+        num_return_sequences=1,
+        max_new_tokens=128,
+        base_kv_cache=None,
+        **kwargs,
+    ):
+        """
+        Generate completions continuing from a provided KV cache and a new prompt.
+        Uses stepwise sampling with top-p/top-k/temperature.
+        Returns completions and per-sample KV caches after completion.
+        """
+        device = agent.device
+        # Use the provided external prompt text directly (already prepared)
+        prompts = [item.get("prompt", "") for item in batch_items]
+        if self.tokenizer is None:
+            raise ValueError("Tokenizer is required for generating completions")
+        if self.tokenizer.pad_token is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+
+        # Tokenize the new prompts (single item)
+        enc = self.tokenizer(
+            prompts, padding=True, truncation=True, return_tensors="pt"
+        ).to(device)
+        prompt_input_ids = enc.input_ids
+        prompt_attention_mask = enc.attention_mask
+
+        # Ensure training mode saved/restored
+        training_mode = agent.training
+        agent.eval()
+
+        # We only process batch_size=1
+        prompt_ids = prompt_input_ids[0]
+
+        # Forward the new prompt into the cache
+        with torch.no_grad():
+            outputs = agent(
+                input_ids=prompt_ids.unsqueeze(0),
+                use_cache=True,
+                past_key_values=base_kv_cache,
+                attention_mask=prompt_attention_mask[0].unsqueeze(0),
+            )
+            logits_last = outputs.logits[:, -1, :]
+            kv_after_prompt = outputs.past_key_values
+
+        # Sampling configs
+        temperature = max(float(self.args.temperature), 1e-6)
+        top_p = float(self.args.top_p)
+        top_k = 50
+        eos_id = self.tokenizer.eos_token_id or getattr(
+            agent.config, "eos_token_id", None
+        )
+
+        seq_texts: List[str] = []
+        seq_tokens: List[torch.Tensor] = []
+        kv_caches_after_completion: List[Any] = []
+
+        for s in range(num_return_sequences):
+            # Restart from kv_after_prompt for each sequence
+            current_kv = kv_after_prompt
+            current_logits = logits_last
+            seq_token_ids: List[int] = []
+            steps = 0
+            while steps < int(max_new_tokens):
+                # Temperature and top-p/top-k sampling
+                logits = current_logits[0]
+                if temperature != 1.0:
+                    logits = logits / temperature
+                probs = torch.softmax(logits, dim=-1)
+
+                # Top-k
+                if top_k is not None and top_k > 0:
+                    topk_vals, topk_idx = torch.topk(
+                        probs, k=min(top_k, probs.size(-1))
+                    )
+                    probs_topk = torch.zeros_like(probs).scatter_(
+                        0, topk_idx, topk_vals
+                    )
+                    probs = probs_topk
+
+                # Top-p nucleus
+                if top_p is not None and 0.0 < top_p < 1.0:
+                    sorted_probs, sorted_idx = torch.sort(probs, descending=True)
+                    cumulative = torch.cumsum(sorted_probs, dim=-1)
+                    mask = cumulative - sorted_probs > top_p
+                    sorted_probs[mask] = 0
+                    probs = torch.zeros_like(probs).scatter_(
+                        0, sorted_idx, sorted_probs
+                    )
+                probs = probs / probs.sum()
+
+                next_token = torch.multinomial(probs, num_samples=1)
+                token_id = int(next_token.item())
+                seq_token_ids.append(token_id)
+
+                if eos_id is not None and token_id == int(eos_id):
+                    # Stop at EOS
+                    with torch.no_grad():
+                        out = agent(
+                            input_ids=next_token.view(1, 1),
+                            use_cache=True,
+                            past_key_values=current_kv,
+                        )
+                        current_kv = out.past_key_values
+                    break
+
+                # Step
+                with torch.no_grad():
+                    out = agent(
+                        input_ids=next_token.view(1, 1).to(device),
+                        use_cache=True,
+                        past_key_values=current_kv,
+                    )
+                current_kv = out.past_key_values
+                current_logits = out.logits[:, -1, :]
+                steps += 1
+
+            # Convert to tensor list
+            tokens_tensor = torch.tensor(seq_token_ids, device=device, dtype=torch.long)
+            seq_tokens.append(tokens_tensor)
+            text = self.tokenizer.decode(tokens_tensor, skip_special_tokens=True)
+            seq_texts.append(text)
+            kv_caches_after_completion.append(current_kv)
+
+        # Restore training mode
+        agent.train(training_mode)
+
+        # Build completion masks
+        completion_attention_masks = []
+        batch_masks = []
+        for tokens in seq_tokens:
+            mask = torch.ones(len(tokens), device=device)
+            batch_masks.append(mask)
+        completion_attention_masks.append(batch_masks)
+
+        return {
+            "prompts": prompts,
+            "batch_items": batch_items,
+            "prompt_input_ids": prompt_input_ids,
+            "prompt_attention_mask": prompt_attention_mask,
+            "completions": [seq_texts],
+            "completion_input_ids": [seq_tokens],
+            "completion_attention_mask": completion_attention_masks,
+            "kv_before_prompt": base_kv_cache,
+            "kv_after_prompt": kv_after_prompt,
+            "kv_caches_after_completion": kv_caches_after_completion,
+        }
 
     def _compute_rewards(
         self, prompts, completions_list, batch_items=None
@@ -1321,52 +1584,107 @@ class MAGRPOTrainer:
         # Process single prompt (batch_size=1)
         prompt_ids = prompt_input_ids[0]
 
-        # Process each generated completion for this prompt
-        for seq_idx, completion_tokens in enumerate(completion_input_ids[0]):
-            # Break if we've processed enough completions for the available rewards
-            if seq_idx >= len(advantages):
-                break
+        # Memory-aware loss: if memory_mode is 'memoryful' and kv caches provided,
+        # compute sequence log-probs by stepping with past_key_values across tokens.
+        if getattr(self, "memory_mode", "last") == "memoryful" and (
+            "kv_before_prompt" in completions_data
+        ):
+            base_kv = completions_data.get("kv_before_prompt", None)
+            # Forward prompt tokens to get kv after prompt with gradients
+            outputs = agent(
+                input_ids=prompt_ids.unsqueeze(0),
+                use_cache=True,
+                past_key_values=base_kv,
+            )
+            current_kv_after_prompt = outputs.past_key_values
+            logits_last = outputs.logits[:, -1, :]
 
-            advantage = advantages[seq_idx]
+            # For each generated completion sequence
+            for seq_idx, completion_tokens in enumerate(completion_input_ids[0]):
+                if seq_idx >= len(advantages):
+                    break
+                advantage = advantages[seq_idx]
+                if len(completion_tokens) == 0:
+                    continue
 
-            # Create input sequence by concatenating prompt with all but last token of completion
-            # (we'll predict the next token at each step)
-            if len(completion_tokens) > 0:
-                input_ids = torch.cat([prompt_ids, completion_tokens[:-1]])
+                # Start from kv after prompt and logits_last
+                current_kv = current_kv_after_prompt
+                current_logits = logits_last
+                log_probs: List[torch.Tensor] = []
 
-                # Target is the completion tokens
-                target_ids = completion_tokens
+                # Step through each token in the completion
+                for i, token_id in enumerate(completion_tokens):
+                    # Compute log prob of this token from current logits
+                    token_logits = current_logits[0]
+                    token_log_prob = torch.log_softmax(token_logits, dim=-1)[token_id]
+                    log_probs.append(token_log_prob)
 
-                # Create attention mask for the full sequence
-                attention_mask = torch.ones(len(input_ids), device=device)
-
-                # Forward pass with gradients enabled
-                outputs = agent(
-                    input_ids=input_ids.unsqueeze(0),  # Add batch dimension
-                    attention_mask=attention_mask.unsqueeze(0),  # Add batch dimension
-                )
-
-                # Get logits for the completion part (excluding prompt)
-                completion_logits = outputs.logits[0, prompt_ids.size(0) - 1 : -1, :]
-
-                # Calculate log probabilities
-                log_probs = []
-                for i, token_id in enumerate(target_ids):
-                    if i < completion_logits.size(
-                        0
-                    ):  # Check if we have logits for this position
-                        token_logits = completion_logits[i]
-                        token_log_prob = torch.log_softmax(token_logits, dim=-1)[
-                            token_id
-                        ]
-                        log_probs.append(token_log_prob)
+                    # Advance KV with teacher forcing of this token
+                    out = agent(
+                        input_ids=token_id.view(1, 1),
+                        use_cache=True,
+                        past_key_values=current_kv,
+                    )
+                    current_kv = out.past_key_values
+                    current_logits = out.logits[:, -1, :]
 
                 if log_probs:
                     sequence_log_prob = torch.stack(log_probs).sum()
-                    # Policy gradient loss: -log_prob * advantage
                     loss = -sequence_log_prob * advantage
                     total_loss = total_loss + loss
                     num_samples += 1
+
+        else:
+            # Token-based loss (no KV carryover): concatenate prompt + completion
+            for seq_idx, completion_tokens in enumerate(completion_input_ids[0]):
+                # Break if we've processed enough completions for the available rewards
+                if seq_idx >= len(advantages):
+                    break
+
+                advantage = advantages[seq_idx]
+
+                # Create input sequence by concatenating prompt with all but last token of completion
+                # (we'll predict the next token at each step)
+                if len(completion_tokens) > 0:
+                    input_ids = torch.cat([prompt_ids, completion_tokens[:-1]])
+
+                    # Target is the completion tokens
+                    target_ids = completion_tokens
+
+                    # Create attention mask for the full sequence
+                    attention_mask = torch.ones(len(input_ids), device=device)
+
+                    # Forward pass with gradients enabled
+                    outputs = agent(
+                        input_ids=input_ids.unsqueeze(0),  # Add batch dimension
+                        attention_mask=attention_mask.unsqueeze(
+                            0
+                        ),  # Add batch dimension
+                    )
+
+                    # Get logits for the completion part (excluding prompt)
+                    completion_logits = outputs.logits[
+                        0, prompt_ids.size(0) - 1 : -1, :
+                    ]
+
+                    # Calculate log probabilities
+                    log_probs = []
+                    for i, token_id in enumerate(target_ids):
+                        if i < completion_logits.size(
+                            0
+                        ):  # Check if we have logits for this position
+                            token_logits = completion_logits[i]
+                            token_log_prob = torch.log_softmax(token_logits, dim=-1)[
+                                token_id
+                            ]
+                            log_probs.append(token_log_prob)
+
+                    if log_probs:
+                        sequence_log_prob = torch.stack(log_probs).sum()
+                        # Policy gradient loss: -log_prob * advantage
+                        loss = -sequence_log_prob * advantage
+                        total_loss = total_loss + loss
+                        num_samples += 1
 
         # Average the loss over all processed samples
         if num_samples > 0:
