@@ -10,7 +10,11 @@
 
 **Co**operative **M**ulti-**L**LM **R**einforcement **L**earning (**CoMLRL**) is a open-source library for training multiple LLM agents to collaborate using multi-agent reinforcement learning (MARL). It provides implementations of various MARL algorithms for LLM collaboration tasks and support for different environments and benchmarks.
 
-## Setup
+![img.png](/docs/dec-pomdp.png)
+
+## Installation
+
+To use the latest version of CoMLRL, clone the repository and install the required dependencies:
 
 ```bash
 cd CoMLRL
