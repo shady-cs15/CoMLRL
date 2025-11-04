@@ -1,4 +1,6 @@
-# CoMLRL
+<img src="docs/assets/comlrl.png" width="500px;" alt=""/>
+
+---
 
 [![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/release/python-3100/)
 [![CI](https://github.com/OpenMLRL/CoMLRL/actions/workflows/ci.yml/badge.svg)](https://github.com/OpenMLRL/CoMLRL/actions/workflows/ci.yml)
