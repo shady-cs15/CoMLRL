@@ -34,7 +34,7 @@ pip install -e .
 
 ## Usage
 
-Here is an example to train 2 `Qwen-2.5-0.5B` agents to summarize TLDR with MAGRPO. The objective is to have a summary with 2 paragraphs, where the second one is 3 times longer than the first one.
+Here is an example to train 2 `Qwen-2.5-0.5B` agents to summarize Reddit posts with MAGRPO. The objective is to have a summary with 2 paragraphs, where the second one is 3 times longer than the first one.
 
 ```python
 from datasets import load_dataset
