@@ -30,7 +30,7 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-*Please make sure a compatible `torch` is installed according to your system and CUDA version.*
+<em><sub>Please make sure a compatible `torch` is installed according to your system and CUDA version.</sub></em>
 
 ## Usage
 
