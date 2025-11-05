@@ -34,7 +34,7 @@ Make sure `torch` is installed separately according to your system and CUDA vers
 
 ## Usage
 
-Training 2 Qwen-2.5-0.5B agents to collaborate on TLDR summarization with MAGRPO, where the second agent is encouraged to generate summaries that are 3 times longer than the first agent.
+Training 2 `Qwen-2.5-0.5B` agents to collaborate on TLDR summarization with MAGRPO, where the second agent is encouraged to generate summaries that are 3 times longer than the first agent.
 
 ```python
 from datasets import load_dataset
