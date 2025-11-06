@@ -22,7 +22,7 @@ You can install the stable version of this library from PyPI using pip:
 python3 -m pip install comlrl
 ```
 
-To use the latest version of CoMLRL, please install it by cloning this repository:
+If you want to use the latest version of CoMLRL, please clone this repository and install it in editable mode:
 
 ```bash
 cd CoMLRL
@@ -30,7 +30,7 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-<em><sub>Please make sure you have a compatible `torch` installed according to the CUDA.</sub></em>
+<em><sub>Note: Make sure you have a compatible `torch` installed according to the CUDA.</sub></em>
 
 ## Usage
 
