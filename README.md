@@ -12,10 +12,6 @@
 
 **Co**operative **M**ulti-**L**LM **R**einforcement **L**earning (**CoMLRL**) is a open-source library for training multiple LLMs to collaborate using Multi-Agent Reinforcement Learning (MARL). It provides implementations of various MARL algorithms for LLM collaboration and support for different environments and benchmarks.
 
-## Features
-
-<img src="docs/assets/demo.gif" width="400px;" alt=""/>
-
 ## Installation
 
 You can install the stable version of this library from PyPI using pip:
@@ -33,6 +29,10 @@ pip install -e .
 ```
 
 <em><sub>Note: Make sure you have a compatible `torch` installed according to the CUDA.</sub></em>
+
+## Features
+
+<img src="docs/assets/demo.gif" width="400px;" alt=""/>
 
 ## Usage
 
