@@ -11,6 +11,12 @@ To install the stable version of this library from PyPI using pip:
 pip install comlrl
 ```
 
+Or from conda-forge using conda:
+
+```bash
+conda install -c conda-forge comlrl
+```
+
 To access the latest features of CoMLRL, please clone this repository and install it in editable mode:
 
 ```bash

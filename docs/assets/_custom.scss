@@ -203,6 +203,9 @@ $article-text-color: $menu-item-color; /* keep variable for potential reuse */
 
 .book-search input {
   padding-right: 3.5rem !important;
+  border-width: 2px !important;
+  border-radius: 12px !important;
+  border-color: #ccc !important;
 }
 
 .book-search::after {

@@ -1,12 +1,13 @@
 # <img src="docs/assets/comlrl.png" width="400px;" alt=""/>
 
-[![OpenMLRL](https://img.shields.io/badge/OpenMLRL-Project-blue.svg)](https://openmlrl.github.io)
+[![OpenMLRL](https://img.shields.io/badge/OpenMLRL-Project-888DA6.svg?logoColor=black)](https://openmlrl.github.io)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-CoMLRL-yellow.svg?logo=huggingface&logoColor=darkgrey)](https://huggingface.co/CoMLRL)
 [![arXiv](https://img.shields.io/badge/arXiv-2508.04652-b31b1b.svg?logo=arxiv&logoColor=darkgrey)](https://arxiv.org/pdf/2508.04652)
 
 [![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg?logo=python&logoColor=darkgrey)](https://www.python.org/downloads/release/python-3100/)
 [![CI](https://github.com/OpenMLRL/CoMLRL/actions/workflows/ci.yml/badge.svg)](https://github.com/OpenMLRL/CoMLRL/actions/workflows/ci.yml)
 [![pre-commit.ci](https://github.com/OpenMLRL/CoMLRL/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/OpenMLRL/CoMLRL/actions/workflows/pre-commit.yml)
+
 [![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT)
 
@@ -18,6 +19,12 @@ You can install the stable version of this library from PyPI using pip:
 
 ```bash
 pip install comlrl
+```
+
+Or from conda-forge using conda:
+
+```bash
+conda install -c conda-forge comlrl
 ```
 
 If you want to use the latest version of CoMLRL, please clone this repository and install it in editable mode:
