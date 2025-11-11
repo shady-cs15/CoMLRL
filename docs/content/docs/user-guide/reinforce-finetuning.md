@@ -4,7 +4,7 @@ weight: 2
 math: true
 ---
 
-REINFORCE optimizes the policy directly using sampled returns. An action-independent baseline can be involved to reduce variance for REINFORCE methods. REINFORCE methods have been widely used to fine-tune LLMs, because of their simplicity and effectiveness, e.g, [GRPO](https://arxiv.org/pdf/2402.03300),[Dr. GRPO](https://arxiv.org/abs/2503.20783), [RLOO](https://openreview.net/forum?id=r1lgTGL5DE), [ReMax](https://arxiv.org/abs/2310.1050), [TreeRPO](https://arxiv.org/abs/2506.05183), and [REINFROCE++](https://arxiv.org/abs/2501.03262).
+REINFORCE optimizes the policy directly using sampled returns. An action-independent baseline can be included to reduce variance for REINFORCE methods. REINFORCE methods have been widely used to fine-tune LLMs because of their simplicity and effectiveness, e.g., [GRPO](https://arxiv.org/pdf/2402.03300), [Dr. GRPO](https://arxiv.org/abs/2503.20783), [RLOO](https://openreview.net/forum?id=r1lgTGL5DE), [ReMax](https://arxiv.org/abs/2310.1050), [TreeRPO](https://arxiv.org/abs/2506.05183), and [REINFORCE++](https://arxiv.org/abs/2501.03262).
 
 ## MAREINFORCE
 
@@ -18,7 +18,7 @@ J(\theta_i) = \mathbb{E}_{\mathbf{o}_0 \sim \mathcal{D}, \mathbf{h}^\mathcal{G} 
 {{< /katex >}}
 
 {{% hint success %}}
-These classes are derived from `comlrl.trainers.magrpo.MAGRPOTrainer`. Interfaces for the trainer and configuration classes are same as `MAGRPOTrainer` and `MAGRPOConfig`.
+These classes are derived from `comlrl.trainers.magrpo.MAGRPOTrainer`. Interfaces for the trainer and configuration classes are the same as `MAGRPOTrainer` and `MAGRPOConfig`.
 {{% /hint %}}
 
 ## MAGRPO
@@ -85,7 +85,7 @@ J(\theta_i) = \mathbb{E}_{\mathbf{o}_0 \sim \mathcal{D}, \mathbf{h}^\mathcal{G} 
 \Bigg[\frac{1}{|\mathcal{G}|}\sum_{g \in \mathcal{G}} \Big( R^{(g)}_t - \sum_{k\in \mathcal{G},\, k\neq g}\tfrac{R^{(k)}_t}{|\mathcal{G}|-1} \Big) \cdot \log \pi_{\theta_i}(a^{(g)}_{i,t}\mid h_{i,t}) \Bigg];
 {{< /katex >}}
 
-- **MAReMax**: Multi‑Agent REINFORCE with Group Max. Baseline is the maximum group return at the step.
+- **MAREMAX**: Multi‑Agent REINFORCE with Group Max. Baseline is the maximum group return at the step.
 
 {{< katex display=true >}}
 J(\theta_i) = \mathbb{E}_{\mathbf{o}_0 \sim \mathcal{D}, \mathbf{h}^\mathcal{G} \sim \mathbf{\pi}_{\mathbf{\theta}}}
@@ -93,5 +93,5 @@ J(\theta_i) = \mathbb{E}_{\mathbf{o}_0 \sim \mathcal{D}, \mathbf{h}^\mathcal{G} 
 {{< /katex >}}
 
 {{% hint success %}}
-These classes are derived from `comlrl.trainers.magrpo.MAGRPOTrainer`. Interfaces for the trainer and configuration classes are same as `MAGRPOTrainer` and `MAGRPOConfig`.
+These classes are derived from `comlrl.trainers.magrpo.MAGRPOTrainer`. Interfaces for the trainer and configuration classes are the same as `MAGRPOTrainer` and `MAGRPOConfig`.
 {{% /hint %}}

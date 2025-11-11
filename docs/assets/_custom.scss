@@ -113,7 +113,7 @@ $article-text-color: $menu-item-color; /* keep variable for potential reuse */
 
 /* Normalize nested list indent so Trainer matches other sections */
 .book-menu .book-menu-content nav > ul > li > ul {
-  padding-inline-start: 0 !important; /* theme sets 1.5em; zero for consistency */
+  padding-inline-start: 0 !important;
   margin: 0;
 }
 
@@ -128,7 +128,7 @@ $article-text-color: $menu-item-color; /* keep variable for potential reuse */
 /* Article typography: updated sizes and weights */
 .book-article {
   font-size: 1rem;
-  color: $menu-item-color !important; /* match sidebar file link color */
+  color: $menu-item-color !important;
   margin-left: auto;
   margin-right: auto;
   width: 80%;
@@ -287,21 +287,21 @@ body {
 
 /* Lighter hint box backgrounds (15% lighter) */
 .book-hint.info {
-  background-color: #f4f9ff !important; /* lighter sky blue */
+  background-color: #f4f9ff !important;
   border-left-color: #a0d2f0 !important;
 }
 
 .book-hint.warning {
-  background-color: #fffcf0 !important; /* darker yellow/orange */
+  background-color: #fffcf0 !important;
   border-left-color: #ffe3a0 !important;
 }
 
 .book-hint.danger {
-  background-color: #fff7f8 !important; /* lighter red */
+  background-color: #fff7f8 !important;
   border-left-color: #ffd4dc !important;
 }
 
 .book-hint.success {
-  background-color: #f2faf3 !important; /* darker green */
+  background-color: #f2faf3 !important;
   border-left-color: #c2e4c5 !important;
 }

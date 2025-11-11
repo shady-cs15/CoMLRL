@@ -3,9 +3,9 @@ title: CoMLRL Quick Demo
 weight: 1
 ---
 
-This tutorial demonstrates how to train 2 LLM agents to collaborate to telling a story. The first agent generates a compact story setup, while the second agent produces a longer version. The reward function encourages the second agent's output to be 2–3× longer than the first agent's.
+This tutorial demonstrates how to train two LLM agents to collaborate to tell a story. The first agent generates a compact story setup, while the second agent produces a longer version. The reward function encourages the second agent's output to be 2–3× longer than the first agent's.
 
-To run this demo, please have at least 24 GB of GPU memory available. And you can visualized the training process by setting up your WandB.
+To run this demo, please have at least 24 GB of GPU memory available. You can also visualize the training process by setting up your WandB dashboard.
 
 ## Import Libraries
 
@@ -42,7 +42,7 @@ train_dataset = Dataset.from_dict(train_data)
 
 ## Agent Initialization
 
-We load a tokenizer to convert text into tokens that the model can process and initialized 2 separate instances.
+We load a tokenizer to convert text into tokens that the model can process and initialize two separate instances.
 
 ```python
 model_name = "Qwen/Qwen2.5-0.5B"

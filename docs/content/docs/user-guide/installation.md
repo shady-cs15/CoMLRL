@@ -3,7 +3,7 @@ title: Installation
 weight: 1
 ---
 
-You can create an venv or conda environment with Python 3.10+ and install CoMLRL as follows.
+You can create a venv or conda environment with Python 3.10+ and install CoMLRL as follows.
 
 To install the stable version of this library from PyPI using pip:
 

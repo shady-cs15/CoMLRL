@@ -13,7 +13,7 @@
 .book-menu .book-menu-content > ul > li > summary,
 .book-menu .book-menu-content nav > ul > li > label,
 .book-menu .book-menu-content nav > ul > li > summary {
-  color: #384058 !important; /* darker by 10 for section names */
+  color: #384058 !important;
 }
 
 /* File/page links (nested items) */
@@ -25,12 +25,12 @@
 .book-menu nav ul li ul li > a.active,
 .book-menu nav ul li ul li > a[aria-current="page"],
 .book-menu nav ul li ul li > a[aria-current="true"] {
-  color: #545b74 !important; /* darker by 10 for file/page links */
+  color: #545b74 !important;
 }
 
 /* Normalize nested list indent so Trainer matches other sections */
 .book-menu .book-menu-content nav > ul > li > ul {
-  padding-inline-start: 0 !important; /* theme defaults to 1.5em; zero it */
+  padding-inline-start: 0 !important;
   margin: 0; /* keep consistent spacing */
 }
 
