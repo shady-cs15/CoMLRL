@@ -17,7 +17,7 @@
 You can install the stable version of this library from PyPI using pip:
 
 ```bash
-python3 -m pip install comlrl
+pip install comlrl
 ```
 
 If you want to use the latest version of CoMLRL, please clone this repository and install it in editable mode:

@@ -8,7 +8,7 @@ You can create a venv or conda environment with Python 3.10+ and install CoMLRL 
 To install the stable version of this library from PyPI using pip:
 
 ```bash
-python3 -m pip install comlrl
+pip install comlrl
 ```
 
 To access the latest features of CoMLRL, please clone this repository and install it in editable mode:
