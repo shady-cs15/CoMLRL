@@ -31,15 +31,15 @@ Cooperative MARL methods are grounded in the theory of <a href="https://www.fran
 
 {{% tab "Q&A" %}}
 
-- <em style="font-weight: 500; color: #843b54;"> "Does CoMLRL include test-time multi-agent methods?"</em>
+- <em style="font-weight: 500; color: #9555af;"> "Does CoMLRL include test-time multi-agent methods?"</em>
 
   No, this library primarily focuses on optimizing LLM collaboration by MARL. Designing multi-agent test-time interactions is not our strength. Users can refer to <a href="https://github.com/microsoft/autogen">AutoGen</a>, <a href="https://langroid.github.io/langroid/">langroid</a>, <a href="https://github.com/TsinghuaC3I/MARTI">MARTI</a> for help.
 
-- <em style="font-weight: 500; color: #843b54;"> "Does CoMLRL support self-play or self-improvement by MARL?"</em>
+- <em style="font-weight: 500; color: #9555af;"> "Does CoMLRL support self-play or self-improvement by MARL?"</em>
 
   No, we are just focusing on LLM collaboration formalized as <a href="https://www.fransoliehoek.net/docs/OliehoekAmato16book.pdf">Dec-POMDP</a>. The algorithms in this library do not cover competitive or mixed-game scenarios. Users may refer to <a href="https://github.com/spiral-rl/spiral">Spiral</a> and <a href="https://github.com/vsubramaniam851/multiagent-ft/tree/main">MAFT</a> for help.
 
-- <em style="font-weight: 500; color: #843b54;"> "Does CoMLRL support distributed training?"</em>
+- <em style="font-weight: 500; color: #9555af;"> "Does CoMLRL support distributed training?"</em>
 
   No, the current purpose of this library is to show the effectiveness of MARL in proof of concepts using small-scale LLMs. Distributed training for large-scale LLMs will be supported in the future.
 
