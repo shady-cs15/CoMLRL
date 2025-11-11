@@ -68,17 +68,3 @@ Cooperative MARL methods are grounded in the theory of <a href="https://www.fran
     - [ClassEval](https://conf.researchr.org/details/icse-2024/icse-2024-research-track/219/Evaluating-Large-Language-Models-in-Class-Level-Code-Generation) - Complete class-level code based on method stubs and docstrings.
 
 <img src="/img/demo.gif" width="800px;" alt=""/>
-
-# Table of Contents
-
-## User Guide
-- [Installation]({{< ref "/docs/user-guide/installation" >}})
-- [Multi-Agent REINFORCE]({{< ref "/docs/user-guide/reinforce-finetuning" >}})
-- [Multi-Agent PPO]({{< ref "/docs/user-guide/ppo-finetuning" >}})
-- [Multi-Turn Training]({{< ref "/docs/user-guide/multi-turn" >}})
-
-## Examples
-- [Quick Demo]({{< ref "/docs/examples/quick-demo" >}})
-
-## Development
-- [Contributing]({{< ref "/docs/dev/contributing" >}})
