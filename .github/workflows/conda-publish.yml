@@ -1,0 +1,52 @@
+name: Publish to Conda
+
+# Note: This workflow creates a PR to conda-forge feedstock
+# After the first release, you'll need to submit comlrl to conda-forge
+# See: https://conda-forge.org/docs/maintainer/adding_pkgs.html
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-feedstock:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Get release version
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install conda-smithy
+      run: |
+        pip install conda-smithy
+
+    - name: Create conda-forge PR (automated)
+      env:
+        VERSION: ${{ steps.get_version.outputs.VERSION }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "New version $VERSION released"
+        echo "After initial submission to conda-forge, the regro-cf-autotick-bot will"
+        echo "automatically create PRs for new releases on the feedstock repository."
+        echo ""
+        echo "For first-time setup:"
+        echo "1. Create a feedstock PR at https://github.com/conda-forge/staged-recipes"
+        echo "2. Follow the instructions at https://conda-forge.org/docs/maintainer/adding_pkgs.html"
+        echo "3. Once accepted, future releases will be automated by regro-cf-autotick-bot"
+
+    # Placeholder for future automation once feedstock exists
+    # - name: Trigger feedstock update
+    #   if: false  # Enable this after feedstock is created
+    #   run: |
+    #     # The conda-forge bot will automatically detect new releases on PyPI
+    #     # and create PRs to update the feedstock
+    #     echo "Feedstock update will be handled automatically by regro-cf-autotick-bot"
