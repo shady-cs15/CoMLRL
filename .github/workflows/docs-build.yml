@@ -34,7 +34,7 @@ jobs:
     - name: Build documentation
       run: |
         cd docs
-        hugo --minify --baseURL "https://openmlrl.github.io/CoMLRL/"
+        hugo --minify
 
     - name: Deploy to OpenMLRL.github.io
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'

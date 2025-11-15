@@ -1,4 +1,4 @@
-baseURL = "/CoMLRL/"     # Deployed under OpenMLRL.github.io/CoMLRL/
+baseURL = "/"            # Hugo will be built with CLI baseURL override
 title = "CoMLRL"
 languageCode = "en-us"
 defaultContentLanguage = "en"
