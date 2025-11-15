@@ -36,7 +36,7 @@ jobs:
 
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        # Using trusted publishing (recommended - configure at https://pypi.org/manage/account/publishing/)
-        # Alternative: use API token by setting PYPI_API_TOKEN secret and uncommenting below:
-        # password: ${{ secrets.PYPI_API_TOKEN }}
+      # Using trusted publishing (recommended - configure at https://pypi.org/manage/account/publishing/)
+      # Alternative: use API token by setting PYPI_API_TOKEN secret and uncommenting below:
+      # with:
+      #   password: ${{ secrets.PYPI_API_TOKEN }}
