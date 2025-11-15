@@ -167,3 +167,6 @@ $RECYCLE.BIN/
 
 # wandb
 wandb/
+
+# Hugo cache
+.hugo_cache/
