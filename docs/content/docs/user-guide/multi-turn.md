@@ -80,7 +80,7 @@ def custom_external(
 
 This interface allows full flexibility in how environment feedback, tool outputs, or other contextual information is integrated into the multi-turn training loop.
 
-### Example Modes (Expert, Diagnosis, Self-Improvement)
+### Example Modes (Expert, Diagnosis, and Self-Improvement)
 
 An [environment for code generation](https://github.com/OpenMLRL/LLM_Collab_Code_Generation) includes 3 example external transition modes:
 
