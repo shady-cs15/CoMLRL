@@ -11,7 +11,9 @@ Many complex problems cannot be solved in a single turn. Agents need to interact
 
 MAGRPO in the multi-turn setting (**MAGRPO-MT**) forms a tree-structured rollout expansion where branches represent different joint responses ([TreeRPO](https://arxiv.org/abs/2506.05183)).
 
-<img src="/img/joint-tree.svg" width="500px;" alt=""/>
+<p align="center">
+    <img src="/img/joint-tree.svg" width="450px;" alt=""/>
+</p>
 
 In each episode, a task is sampled from the dataset to construct initial observations {{< katex inline=true >}}\mathbf{o}_0=\{o_{1, 0}, \cdots, o_{n, 0}\}{{< /katex >}} and histories {{< katex inline=true >}}\mathbf{h}_0=\{h_{1, 0}, \cdots, h_{n, 0}\}{{< /katex >}} for all agents. At each turn, agents generate a group of joint responses {{< katex inline=true >}}\mathbf{a}^{\mathcal{G}}_t\gets\boldsymbol{\pi}^{\mathcal{G}}(\cdot|\mathbf{h}_t){{< /katex >}} from their current observation-action history {{< katex inline=true >}}\mathbf{h}_t{{< /katex >}}, with each response initiating a distinct rollout. Agents receive joint rewards {{< katex inline=true >}}r^{(g)}_{t}{{< /katex >}} for each response based on the accumulated history {{< katex inline=true >}}\mathbf{a}^{(g)}_{t} \in \mathbf{a}^{\mathcal{G}}_{t}{{< /katex >}} and current action. **Each rollout then evolves independently**, producing new joint observations {{< katex inline=true >}}\mathbf{o}^{\mathcal{G}}_{t+1}{{< /katex >}} as the environment dynamics unfold and spawning more rollouts at the next turn {{< katex inline=true >}}t+1{{< /katex >}}. This process continues until the terminal turn is reached {{< katex inline=true >}}H{{< /katex >}}.
 
@@ -21,11 +23,15 @@ MAGRPO supports two modes for forming joint responses at each turn:
 
 - **Align**: Provides flexibility in the number of joint responses generated per turn, allowing any number of generations at each turn. However, generations are not fully utilized since only aligned responses across agents are combined. As training progresses over {{< katex inline=true >}}T{{< /katex >}} turns with {{< katex inline=true >}}N{{< /katex >}} agents, the total number of leaves grows as {{< katex inline=true >}}G^T{{< /katex >}}, where {{< katex inline=true >}}G{{< /katex >}} is the number of generations per turn.
 
-<img src="/img/align-tree.svg" width="500px;" alt=""/>
+<p align="center">
+    <img src="/img/align-tree.svg" width="500px;" alt=""/>
+</p>
 
 - **Cross**: Maximizes the utilization of generations and provides more accurate value estimation with more samples by forming the Cartesian product of all agent responses. As training progresses over {{< katex inline=true >}}T{{< /katex >}} turns with {{< katex inline=true >}}N{{< /katex >}} agents, the total number of leaves grows as {{< katex inline=true >}}G^{N \cdot T}{{< /katex >}}, where each node has {{< katex inline=true >}}G^N{{< /katex >}} sibling joint actions.
 
-<img src="/img/cross-tree.svg" width="500px;" alt=""/>
+<p align="center">
+    <img src="/img/cross-tree.svg" width="500px;" alt=""/>
+</p>
 
 {{% hint warning %}}
 Note that only responses originating from the same rollout can be combined, as rollouts evolve independently.
