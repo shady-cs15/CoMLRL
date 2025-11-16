@@ -10,6 +10,28 @@ title: ""
 
 {{< tabs >}}
 
+{{% tab "Q&A" %}}
+
+<em style="font-weight: 600; color: #9555af; margin-bottom: -0.5rem; display: block;"> "What are the differences between CoMLRL and other multi-LLM training frameworks?"</em>
+
+A lot of works use role-conditioned, parameter-sharing approaches built on single-agent RL training framework to implement multi-agent training. Using truly distinct agents provides a better modeling where highly heterogeneous LLMs possess fundamentally different capabilities and aligns better with the concept of study — "multi-agent".
+
+CoMLRL implements MARL algorithms from scratch to maximize flexibility and customizability while maintaining simplicity for usage. Additionally, although agents can either be trained centralizedly or decentralizedly with CoMLRL, their execution is always fully decentralized to ensure efficient inference.
+
+<em style="font-weight: 600; color: #9555af; margin-bottom: -0.5rem; display: block;"> "Does CoMLRL support single-agent fine-tuning?"</em>
+
+<strong>Yes!</strong> The simplest way is to set `num_agents=1` in your trainer. But since we omit fancy optimizations for simplicity of multi-agent training, you may not find the single-agent trainers optimal. <a href="https://github.com/hiyouga/LLaMA-Factory">LLaMA-Factory</a>, <a href="https://github.com/huggingface/trl">trl</a>, <a href="https://github.com/OpenRLHF/OpenRLHF">OpenRLHF</a>, and <a href="https://github.com/volcengine/verl">verl</a> are good choices for single-agent fine-tuning.
+
+<em style="font-weight: 600; color: #9555af; margin-bottom: -0.5rem; display: block;"> "Does CoMLRL support self-play/self-improvement/self-evolving by MARL?"</em>
+
+<strong>Yes!</strong> Although we focus on LLM collaboration formalized as <a href="https://www.fransoliehoek.net/docs/OliehoekAmato16book.pdf">Dec-POMDP</a>, users can still customize the interactions with environment to implement pipeline like self-play (<a href="https://github.com/spiral-rl/spiral">Spiral</a>) and self-improvement (<a href="https://github.com/vsubramaniam851/multiagent-ft/tree/main">MAFT</a>). Users can refer to our <a href="docs/user-guide/multi-turn">multi-turn training</a> for more details.
+
+<em style="font-weight: 600; color: #9555af; margin-bottom: -0.5rem; display: block;"> "Does CoMLRL support distributed training?"</em>
+
+<strong>Not yet.</strong> We are currently focusing on <a href="https://arxiv.org/abs/2409.03052">CTDE</a> on light-weighted training small-scale LLMs with cooperative MARL for proof of the concept. Resource-consuming distributed training with slow and complex gradient accumulation is under development and will be open-sourced in the near future.
+
+{{% /tab %}}
+
 {{% tab "LLM Collaboration" %}}
 
 <em style="font-weight: 600; color: #9555af;"> "What is LLM collaboration?"</em>
@@ -32,28 +54,6 @@ Many studies have explored LLM-based multi-agent systems for completing tasks wi
 <em style="font-weight: 600; color: #9555af;"> "What are the benefits of decentralized reasoning?"</em>
 
 Cooperative MARL methods are grounded in the theory of <a href="https://www.fransoliehoek.net/docs/OliehoekAmato16book.pdf">Dec-POMDP</a>. The agents execute in a decentralized manner, which has many advantages. Unlike knowledge distillation, pruning, or quantization, it accelerates LLM inference without incurring information loss. Moreover, decentralization reduces the computational and memory burden of maintaining long-context dependencies and conducting joint decision-making within a single model. By assigning specific subtasks to individual agents, the system achieves more modular, efficient, and lightweight reasoning. In addition, effective cooperation among small local language models can offer a safe and cost-efficient solution for offline and edge intelligence.
-
-{{% /tab %}}
-
-{{% tab "Q&A" %}}
-
-<em style="font-weight: 600; color: #9555af; margin-bottom: -0.5rem; display: block;"> "What are the differences between CoMLRL and other multi-LLM training frameworks?"</em>
-
-A lot of works use role-conditioned, parameter-sharing approaches built on single-agent RL training framework to implement multi-agent training. Using truly distinct agents provides a better modeling where highly heterogeneous LLMs possess fundamentally different capabilities and aligns better with the concept of study — "multi-agent".
-
-CoMLRL implements MARL algorithms from scratch to maximize flexibility and customizability while maintaining simplicity for usage. Additionally, although agents can either be trained centralizedly or decentralizedly with CoMLRL, their execution is always fully decentralized to ensure efficient inference.
-
-<em style="font-weight: 600; color: #9555af; margin-bottom: -0.5rem; display: block;"> "Does CoMLRL support single-agent fine-tuning?"</em>
-
-<strong>Yes!</strong> The simplest way is to set `num_agents=1` in your trainer. But since we omit fancy optimizations for simplicity of multi-agent training, you may not find the single-agent trainers optimal. <a href="https://github.com/hiyouga/LLaMA-Factory">LLaMA-Factory</a>, <a href="https://github.com/huggingface/trl">trl</a>, <a href="https://github.com/OpenRLHF/OpenRLHF">OpenRLHF</a>, and <a href="https://github.com/volcengine/verl">verl</a> are good choices for single-agent fine-tuning.
-
-<em style="font-weight: 600; color: #9555af; margin-bottom: -0.5rem; display: block;"> "Does CoMLRL support self-play/self-improvement/self-evolving by MARL?"</em>
-
-<strong>Yes!</strong> Although we focus on LLM collaboration formalized as <a href="https://www.fransoliehoek.net/docs/OliehoekAmato16book.pdf">Dec-POMDP</a>, users can still customize the interactions with environment to implement pipeline like self-play (<a href="https://github.com/spiral-rl/spiral">Spiral</a>) and self-improvement (<a href="https://github.com/vsubramaniam851/multiagent-ft/tree/main">MAFT</a>). Users can refer to our <a href="docs/user-guide/multi-turn">multi-turn training</a> for more details.
-
-<em style="font-weight: 600; color: #9555af; margin-bottom: -0.5rem; display: block;"> "Does CoMLRL support distributed training?"</em>
-
-<strong>Not yet.</strong> We are currently focusing on <a href="https://arxiv.org/abs/2409.03052">CTDE</a> on light-weighted training small-scale LLMs with cooperative MARL for proof of the concept. Resource-consuming distributed training with slow and complex gradient accumulation is under development and will be open-sourced in the near future.
 
 {{% /tab %}}
 
