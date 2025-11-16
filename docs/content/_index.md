@@ -41,10 +41,6 @@ Cooperative MARL methods are grounded in the theory of <a href="https://www.fran
 
 <strong>Yes!</strong> The simplest way is to set `num_agents=1` in your trainer. But since we omit fancy optimizations for simplicity of multi-agent training, you may not find the single-agent trainers optimal. <a href="https://github.com/hiyouga/LLaMA-Factory">LLaMA-Factory</a>, <a href="https://github.com/huggingface/trl">trl</a>, <a href="https://github.com/OpenRLHF/OpenRLHF">OpenRLHF</a>, and <a href="https://github.com/volcengine/verl">verl</a> are good choices for single-agent fine-tuning.
 
-<em style="font-weight: 600; color: #9555af; margin-bottom: -0.5rem; display: block;"> "Does CoMLRL support advanced multi-agent methods at test-time?"</em>
-
-<strong>No.</strong> This library primarily focuses on optimizing LLM collaboration by MARL. Designing multi-agent test-time interactions is not our strength. Users can refer to <a href="https://github.com/microsoft/autogen">AutoGen</a>, <a href="https://langroid.github.io/langroid/">langroid</a>, <a href="https://github.com/TsinghuaC3I/MARTI">MARTI</a> for help.
-
 <em style="font-weight: 600; color: #9555af; margin-bottom: -0.5rem; display: block;"> "Does CoMLRL support self-play/self-improvement/self-evolving by MARL?"</em>
 
 <strong>Yes!</strong> Although we focus on LLM collaboration formalized as <a href="https://www.fransoliehoek.net/docs/OliehoekAmato16book.pdf">Dec-POMDP</a>, users can still customize the interactions with environment to implement pipeline like self-play (<a href="https://github.com/spiral-rl/spiral">Spiral</a>) and self-improvement (<a href="https://github.com/vsubramaniam851/multiagent-ft/tree/main">MAFT</a>). Users can refer to our <a href="docs/user-guide/multi-turn">multi-turn training</a> for more details.
