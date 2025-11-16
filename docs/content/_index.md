@@ -77,4 +77,7 @@ Cooperative MARL methods are grounded in the theory of <a href="https://www.fran
   - [**_Code Completion_**](https://github.com/OpenMLRL/LLM_Collab_Code_Completion): Complete code snippets based on given contexts.
     - [ClassEval](https://conf.researchr.org/details/icse-2024/icse-2024-research-track/219/Evaluating-Large-Language-Models-in-Class-Level-Code-Generation) - Complete class-level code based on method stubs and docstrings.
 
-<img src="/img/demo.gif" width="800px;" alt=""/>
+
+<p align="center">
+  <img src="/img/demo.gif" width="800px;" alt=""/>
+</p>
