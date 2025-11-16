@@ -364,6 +364,12 @@ body {
     max-width: none !important; /* remove any max-width constraints */
     max-height: none !important; /* remove any max-height constraints */
   }
+
+  /* GitHub corner icon scales with root font size */
+  .github-corner svg {
+    width: 5rem !important; /* use rem units to scale with root font-size */
+    height: 5rem !important; /* 80px at 16px base = 5rem */
+  }
 }
 
 /* Large screens: scale to fit 1400px viewport */
