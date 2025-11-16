@@ -310,23 +310,20 @@ body {
 }
 
 /* ========== Custom responsive styles: always-visible sidebar ========== */
-/* Override default mobile behavior: keep sidebar always visible */
+/* Override default mobile behavior: keep sidebar always visible with same styling */
 @media screen and (max-width: 56rem) {
-  /* Keep sidebar visible with percentage-based width for narrow screens */
+  /* Keep sidebar visible, no transforms or negative margins */
   .book-menu {
     visibility: visible !important;
     margin-inline-start: 0 !important;
-    flex: 0 0 30% !important;
-    min-width: 200px !important;
-    width: 30% !important;
-    font-size: 0.75rem !important;
+    background: $menu-bg !important; /* maintain gray background */
+    border-right: 1px solid $menu-border !important; /* maintain border */
   }
 
   .book-menu .book-menu-content {
-    width: 100% !important;
     transform: none !important;
     box-shadow: none !important;
-    padding: 0.75rem !important;
+    background: transparent !important; /* let parent background show through */
   }
 
   /* Hide mobile header (contains hamburger menu button) */
@@ -345,88 +342,40 @@ body {
     display: none !important;
   }
 
-  /* Adaptive page content adjustments */
+  /* Page content keeps normal opacity */
   .book-page {
-    min-width: 0 !important;
-    flex-grow: 1 !important;
-    padding: 1rem !important;
     opacity: 1 !important;
   }
 
-  /* Adaptive article area */
-  .book-article {
-    width: 95% !important;
-    margin-left: 0.5rem !important;
-    margin-right: 0.5rem !important;
+  /* Scale entire page by reducing root font size */
+  html {
+    font-size: 13px !important; /* down from default 16px, ~81% scale */
   }
 
-  /* Reduce top-level section spacing */
-  .book-menu .book-menu-content > ul > li,
-  .book-menu .book-menu-content nav > ul > li {
-    margin-bottom: 1rem !important;
+  /* Logo and brand title scale with font size */
+  .book-brand,
+  .book-brand a {
+    font-size: 1.5rem !important; /* rem units scale with root font-size */
+  }
+
+  .book-brand img {
+    height: 1.5em !important; /* em units scale with font-size */
+    width: auto !important; /* auto width preserves aspect ratio */
+    max-width: none !important; /* remove any max-width constraints */
+    max-height: none !important; /* remove any max-height constraints */
   }
 }
 
-/* Extra narrow screens (e.g., mobile portrait) optimizations */
+/* Extra narrow screens: further scale down */
 @media screen and (max-width: 600px) {
-  .book-menu {
-    flex: 0 0 35% !important;
-    min-width: 160px !important;
-    width: 35% !important;
-    font-size: 0.7rem !important;
+  html {
+    font-size: 11px !important; /* ~69% scale */
   }
+}
 
-  .book-menu .book-menu-content {
-    padding: 0.5rem !important;
-  }
-
-  .book-menu a {
-    padding: 0.25rem 0.35rem !important;
-  }
-
-  .book-menu nav ul li ul li > a {
-    padding-left: 1rem !important;
-    font-size: 0.75rem !important;
-  }
-
-  .book-page {
-    padding: 0.5rem !important;
-  }
-
-  .book-article {
-    font-size: 0.9rem !important;
-    width: 98% !important;
-    margin-left: 0.25rem !important;
-    margin-right: 0.25rem !important;
-  }
-
-  .book-article h1 {
-    font-size: 1.4rem !important;
-  }
-
-  .book-article h2 {
-    font-size: 1.2rem !important;
-  }
-
-  .book-article h3 {
-    font-size: 0.95rem !important;
-  }
-
-  /* Further reduce section spacing */
-  .book-menu .book-menu-content > ul > li,
-  .book-menu .book-menu-content nav > ul > li {
-    margin-bottom: 0.75rem !important;
-  }
-
-  /* Reduce search box size */
-  .book-search {
-    margin-top: 0.5rem !important;
-    margin-bottom: 1rem !important;
-  }
-
-  /* Reduce brand title font size */
-  .book-brand,
-  .book-brand a {
-    font-size: 1.2rem !important;
+/* Very narrow screens: minimal scaling */
+@media screen and (max-width: 400px) {
+  html {
+    font-size: 9px !important; /* ~56% scale */
   }
 }
