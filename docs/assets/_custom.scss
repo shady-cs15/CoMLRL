@@ -311,7 +311,7 @@ body {
 
 /* ========== Custom responsive styles: always-visible sidebar ========== */
 /* Override default mobile behavior: keep sidebar always visible with same styling */
-@media screen and (max-width: 56rem) {
+@media screen and (max-width: 1600px) {
   /* Keep sidebar visible, no transforms or negative margins */
   .book-menu {
     visibility: visible !important;
@@ -347,9 +347,9 @@ body {
     opacity: 1 !important;
   }
 
-  /* Scale entire page by reducing root font size */
+  /* Scale to fit 1600px viewport: 1600/1600 = 100% (no scaling yet) */
   html {
-    font-size: 13px !important; /* down from default 16px, ~81% scale */
+    font-size: 16px !important; /* full size at 1600px */
   }
 
   /* Logo and brand title scale with font size */
@@ -366,16 +366,37 @@ body {
   }
 }
 
-/* Extra narrow screens: further scale down */
-@media screen and (max-width: 600px) {
+/* Large screens: scale to fit 1400px viewport */
+@media screen and (max-width: 1400px) {
   html {
-    font-size: 11px !important; /* ~69% scale */
+    font-size: 14px !important; /* 1400/1600 = 87.5% → 16px * 0.875 = 14px */
   }
 }
 
-/* Very narrow screens: minimal scaling */
-@media screen and (max-width: 400px) {
+/* Medium-large screens: scale to fit 1200px viewport */
+@media screen and (max-width: 1200px) {
   html {
-    font-size: 9px !important; /* ~56% scale */
+    font-size: 12px !important; /* 1200/1600 = 75% → 16px * 0.75 = 12px */
+  }
+}
+
+/* Medium screens: scale to fit 1000px viewport */
+@media screen and (max-width: 1000px) {
+  html {
+    font-size: 10px !important; /* 1000/1600 = 62.5% → 16px * 0.625 = 10px */
+  }
+}
+
+/* Narrow screens: scale to fit 800px viewport */
+@media screen and (max-width: 800px) {
+  html {
+    font-size: 8px !important; /* 800/1600 = 50% → 16px * 0.5 = 8px */
+  }
+}
+
+/* Very narrow screens: scale to fit 600px viewport */
+@media screen and (max-width: 600px) {
+  html {
+    font-size: 6px !important; /* 600/1600 = 37.5% → 16px * 0.375 = 6px */
   }
 }
