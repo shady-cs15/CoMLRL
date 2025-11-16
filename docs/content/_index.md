@@ -53,7 +53,7 @@ CoMLRL implements MARL algorithms from scratch to maximize flexibility and custo
 
 <em style="font-weight: 600; color: #9555af; margin-bottom: -0.5rem; display: block;"> "Does CoMLRL support distributed training?"</em>
 
-<strong>Not yet.</strong> We are currently focusing on <a href="https://arxiv.org/abs/2409.03052">CTDE</a> on light-weighted training small-scale LLMs with cooperative MARL for the proof of concepts. Resource-consuming distributed training with slow and complex gradient accumulation is under development and will be open-sourced in the near future.
+<strong>Not yet.</strong> We are currently focusing on <a href="https://arxiv.org/abs/2409.03052">CTDE</a> on light-weighted training small-scale LLMs with cooperative MARL for proof of the concept. Resource-consuming distributed training with slow and complex gradient accumulation is under development and will be open-sourced in the near future.
 
 {{% /tab %}}
 
