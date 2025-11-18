@@ -1,9 +1,9 @@
 # <img src="docs/assets/comlrl.png" width="400px;" alt=""/>
 
-[![OpenMLRL](https://img.shields.io/badge/OpenMLRL-Projects-989DD6.svg?logoColor=black)](https://openmlrl.github.io)
+[![OpenMLRL](https://img.shields.io/badge/OpenMLRL-projects-989DD6.svg?logo=https://github.com/OpenMLRL/OpenMLRL.github.io/blob/main/assets/img/openmlrl.svg)](https://openmlrl.github.io)
 [![arXiv](https://img.shields.io/badge/arXiv-2508.04652-b31b1b.svg?logo=arxiv&logoColor=darkgrey)](https://arxiv.org/pdf/2508.04652)
-[![Documentation](https://img.shields.io/badge/Documentation-CoMLRL-blue?logo=read-the-docs&logoColor=darkgrey)](https://openmlrl.github.io/CoMLRL/)
-[![Hugging Face](https://img.shields.io/badge/Hugging%20Face-CoMLRL-yellow.svg?logo=huggingface&logoColor=darkgrey)](https://huggingface.co/CoMLRL)
+[![documentation](https://img.shields.io/badge/documentation-CoMLRL-blue?logo=read-the-docs&logoColor=darkgrey)](https://openmlrl.github.io/CoMLRL/)
+[![Hugging Face](https://img.shields.io/badge/huggingface-CoMLRL-yellow.svg?logo=huggingface&logoColor=darkgrey)](https://huggingface.co/CoMLRL)
 
 [![PyPI version](https://img.shields.io/pypi/v/comlrl.svg?logo=pypi&logoColor=white)](https://pypi.org/project/comlrl/)
 [![Conda version](https://img.shields.io/conda/vn/conda-forge/comlrl.svg?logo=conda-forge&logoColor=white)](https://anaconda.org/conda-forge/comlrl)
@@ -14,8 +14,8 @@
 [![pre-commit.ci](https://github.com/OpenMLRL/CoMLRL/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/OpenMLRL/CoMLRL/actions/workflows/pre-commit.yml)
 [![Docs Build](https://github.com/OpenMLRL/CoMLRL/actions/workflows/docs-build.yml/badge.svg)](https://github.com/OpenMLRL/CoMLRL/actions/workflows/docs-build.yml)
 
-[![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD--3--Clause-orange.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?logo=black&logoColor=darkgrey)](https://github.com/psf/black)
+[![license: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-orange.svg?logo=opensourceinitiative&logoColor=darkgrey)](https://opensource.org/licenses/BSD-3-Clause)
 
 **Co**operative **M**ulti-**L**LM **R**einforcement **L**earning (**CoMLRL**) is an open-source library for training multiple LLMs to collaborate using Multi-Agent Reinforcement Learning (MARL). It provides implementations of various MARL algorithms for LLM collaboration and support for different environments and benchmarks.
 
