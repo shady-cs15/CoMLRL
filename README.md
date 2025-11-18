@@ -2,7 +2,7 @@
 
 [![OpenMLRL](https://img.shields.io/badge/OpenMLRL-Projects-989DD6.svg?logoColor=black)](https://openmlrl.github.io)
 [![arXiv](https://img.shields.io/badge/arXiv-2508.04652-b31b1b.svg?logo=arxiv&logoColor=darkgrey)](https://arxiv.org/pdf/2508.04652)
-[![Documentation](https://img.shields.io/badge/Documentation-CoMLRL-blue?logo=read-the-docs)](https://openmlrl.github.io/CoMLRL/)
+[![Documentation](https://img.shields.io/badge/Documentation-CoMLRL-blue?logo=read-the-docs&logoColor=darkgrey)](https://openmlrl.github.io/CoMLRL/)
 [![Hugging Face](https://img.shields.io/badge/Hugging%20Face-CoMLRL-yellow.svg?logo=huggingface&logoColor=darkgrey)](https://huggingface.co/CoMLRL)
 
 [![PyPI version](https://img.shields.io/pypi/v/comlrl.svg?logo=pypi&logoColor=white)](https://pypi.org/project/comlrl/)
