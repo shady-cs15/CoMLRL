@@ -65,8 +65,8 @@ Cooperative MARL methods are grounded in the theory of <a href="https://www.fran
   - **_Multi-Agent REINFORCE_:** Critic-free policy gradient methods, including [MAREINFORCE](https://github.com/OpenMLRL/CoMLRL/blob/main/comlrl/trainers/mareinforce.py), [MAGRPO](https://github.com/OpenMLRL/CoMLRL/blob/main/comlrl/trainers/magrpo.py), [MARLOO](https://github.com/OpenMLRL/CoMLRL/blob/main/comlrl/trainers/marloo.py), [MAREMAX](https://github.com/OpenMLRL/CoMLRL/blob/main/comlrl/trainers/maremax.py).
     - Aligned individual response joint with `joint_mode='align'`.
     - Memory-efficient cross joint with `joint_mode='cross'`.
-  - **_Multi-Agent PPO:_** Critic-based policy gradient methods, including [IPPO](https://github.com/OpenMLRL/CoMLRL/blob/main/comlrl/trainers/ippo.py).
-    - Canonical IPPO with a separate critic with `use_separate_critic=True`.
+  - **_Multi-Agent Actor-Critic:_** Critic-based policy gradient methods, including [IAC](https://github.com/OpenMLRL/CoMLRL/blob/main/comlrl/trainers/iac.py).
+    - Canonical IAC with a separate critic with `use_separate_critic=True`.
     - Memory-efficient critic with value-head over actor with `use_separate_critic=False`.
 - **Environments that simulate real-world tasks for training and evaluating LLM collaboration:**
   - [**_Writing Collaboration_**](https://github.com/OpenMLRL/LLM_Collab_Writing): Multiple LLM agents collaborate on processing articles.

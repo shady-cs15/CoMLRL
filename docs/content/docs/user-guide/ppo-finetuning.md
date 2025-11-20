@@ -1,29 +1,29 @@
 ---
-title: Multi-Agent PPO
+title: Multi-Agent Actor-Critic
 weight: 3
 math: true
 ---
 
 PPO is a widely used policy gradient method that employs generalized advantage estimation to estimate advantages, reducing the high variance and long rollout times in Monte Carlo methods, e.g., REINFORCE. PPO has also been used for LLM fine-tuning, e.g., [trl](https://huggingface.co/docs/trl/main/en/ppo_trainer), [verl](https://verl.readthedocs.io/en/latest/algo/ppo.html), [LLaMA Factory](https://llamafactory.readthedocs.io/en/latest/advanced/trainers.html#ppo).
 
-## IPPO
+## IAC
 
-Independent PPO ([IPPO](https://arxiv.org/abs/2011.09533)) optimizes each agent's policy independently while using joint returns from multiple agents. Each agent maintains its own actor and critic, other agents serve as part of the environment. The policy objective is:
+Independent Actor-Critic (IAC) optimizes each agent's policy independently while using joint returns from multiple agents. Each agent maintains its own actor and critic, other agents serve as part of the environment. The policy objective is:
 
 {{< katex display=true >}}
-J(\theta_i) = \mathbb{E}_{o_{i,0} \sim \mathcal{D}, h_i \sim \pi_{\theta_i}}\left[\log \pi_{\theta_i}(a_{i,t}|h_{i,t}) \cdot \sum_{l=0}^{\infty} (\gamma\lambda)^l \delta_{i,t+l} + \beta \mathcal{H}(\pi_{\theta_i})\right]
+J(\theta_i) = \mathbb{E}_{o_{i,0} \sim \mathcal{D}, h_i \sim \pi_{\theta_i}}\left[\log \pi_{\theta_i}(a_{i,t}|h_{i,t}) \cdot \delta_{i,t} + \beta \mathcal{H}(\pi_{\theta_i})\right]
 {{< /katex >}}
 
-where {{< katex inline=true >}}\delta_{i,t} = r_{i,t} + \gamma V_{\phi_i}(h_{i,t+1}) - V_{\phi_i}(h_{i,t}){{< /katex >}} is the temporal difference error, {{< katex inline=true >}}\gamma{{< /katex >}} is the discount factor, {{< katex inline=true >}}\lambda{{< /katex >}} is the GAE parameter that balances bias and variance, and {{< katex inline=true >}}\mathcal{H}(\pi_{\theta_i}){{< /katex >}} is the entropy bonus with coefficient {{< katex inline=true >}}\beta{{< /katex >}}.
+where {{< katex inline=true >}}\delta_{i,t} = r_{i,t} + \gamma V_{\phi_i}(h_{i,t+1}) - V_{\phi_i}(h_{i,t}){{< /katex >}} is the (single-step) temporal difference error, {{< katex inline=true >}}\gamma{{< /katex >}} is the discount factor, and {{< katex inline=true >}}\mathcal{H}(\pi_{\theta_i}){{< /katex >}} is the entropy bonus with coefficient {{< katex inline=true >}}\beta{{< /katex >}}.
 
-CoMLRL supports two IPPO architectures for critic implementation:
+CoMLRL supports two IAC architectures for critic implementation:
 
 - **Separate Critic**: Uses an independent model dedicated to value estimation, completely separate from the actor. It provides more stable training but requires longer training time and larger VRAM usage.
 
 - **Value Head**: Attaches a small value prediction head directly to the actor model, sharing the base model's representations. It reduces VRAM usage, but since both actor and critic share the same model, gradient errors can be amplified during training.
 
 {{% hint info %}}
-**IPPOConfig** provides parameters for configuring the PPO training:
+**IACConfig** provides parameters for configuring Independent Actor-Critic training:
 
 - `output_dir`: Directory to save outputs
 - `actor_learning_rate`: Learning rate for actor
@@ -55,14 +55,14 @@ CoMLRL supports two IPPO architectures for critic implementation:
 {{% /hint %}}
 
 {{% hint info %}}
-**IPPOTrainer** trains agents using Independent PPO:
+**IACTrainer** trains agents using Independent Actor-Critic:
 
 - `model`: Model string or PreTrainedModel instance (required for single-agent, must be string for multi-agent)
 - `tokenizer`: The tokenizer (required)
 - `reward_func`: Callable that returns a list of floats (required)
 - `reward_processor`: Optional processor to apply to rewards
 - `formatters`: Single callable or list of callables for each agent to format dataset items into prompts
-- `args`: Instance of `IPPOConfig` (optional)
+- `args`: Instance of `IACConfig` (optional)
 - `train_dataset`: Training dataset (required)
 - `eval_dataset`: Evaluation dataset (optional)
 - `model_config`: Model configuration dict (optional)
@@ -71,7 +71,7 @@ CoMLRL supports two IPPO architectures for critic implementation:
 {{% /hint %}}
 
 {{% hint warning %}}
-CoMLRL implements on-policy IPPO, which computes the policy gradient using the current policy's samples without importance sampling or ratio clipping.
+CoMLRL implements on-policy IAC, which computes the policy gradient using the current policy's samples without importance sampling or ratio clipping.
 {{% /hint %}}
 
 {{% hint warning %}}

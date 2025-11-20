@@ -5,7 +5,7 @@ from typing import List
 from datasets import load_dataset
 from transformers import AutoTokenizer
 
-from comlrl.trainers.ippo import IPPOConfig, IPPOTrainer
+from comlrl.trainers.iac import IACConfig, IACTrainer
 
 
 def dual_length_reward(
@@ -92,7 +92,7 @@ def rollout_metrics(rollouts):
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Train two IPPO agents on TL;DR prompts so the second response is 2-3x longer."
+            "Train two IAC agents on TL;DR prompts so the second response is 2-3x longer."
         )
     )
     parser.add_argument("--model-name", type=str, default="Qwen/Qwen2.5-0.5B")
@@ -115,9 +115,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--ratio-max", type=float, default=3.0)
     parser.add_argument("--short-target-chars", type=int, default=220)
     parser.add_argument("--short-target-scale", type=float, default=None)
-    parser.add_argument("--wandb-project", type=str, default="ippo")
+    parser.add_argument("--wandb-project", type=str, default="iac")
     parser.add_argument("--wandb-entity", type=str, default="OpenMLRL")
-    parser.add_argument("--wandb-run-name", type=str, default="mappo_tldr_ippo")
+    parser.add_argument("--wandb-run-name", type=str, default="mappo_tldr_iac")
     return parser.parse_args()
 
 
@@ -139,7 +139,7 @@ def main() -> None:
     usable = min(args.dataset_size, len(dataset))
     dataset = dataset.select(range(usable))
 
-    config = IPPOConfig(
+    config = IACConfig(
         output_dir=args.output_dir,
         num_train_epochs=args.num_train_epochs,
         actor_learning_rate=args.actor_learning_rate,
@@ -171,7 +171,7 @@ def main() -> None:
         short_scale=args.short_target_scale,
     )
 
-    trainer = IPPOTrainer(
+    trainer = IACTrainer(
         model=args.model_name,
         tokenizer=tokenizer,
         reward_func=reward_fn,

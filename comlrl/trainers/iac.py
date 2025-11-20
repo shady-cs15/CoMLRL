@@ -28,10 +28,10 @@ MetricsCallback = Callable[[List["RolloutSample"]], Dict[str, float]]
 
 
 @dataclass
-class IPPOConfig:
-    """Configuration container for PPO fine-tuning."""
+class IACConfig:
+    """Configuration container for Independent Actor-Critic fine-tuning."""
 
-    output_dir: str = "./ippo_output"
+    output_dir: str = "./iac_output"
     actor_learning_rate: float = 1e-6
     critic_learning_rate: Optional[float] = 1e-6
     weight_decay: float = 0.0
@@ -70,11 +70,13 @@ class IPPOConfig:
         if self.mini_batch_size > self.rollout_buffer_size:
             self.mini_batch_size = self.rollout_buffer_size
         if self.per_device_train_batch_size != 1:
-            raise ValueError("per_device_train_batch_size must be 1 for IPPO.")
+            raise ValueError("per_device_train_batch_size must be 1 for IAC.")
         if self.num_agents < 1:
             raise ValueError("num_agents must be >= 1.")
         if self.num_turns != 1:
-            raise ValueError("Independent PPO currently supports only a single turn.")
+            raise ValueError(
+                "Independent Actor-Critic currently supports only a single turn."
+            )
         if self.critic_learning_rate is None:
             self.critic_learning_rate = self.actor_learning_rate
 
@@ -97,8 +99,8 @@ class RolloutSample:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-class IPPOTrainer:
-    """Independent PPO trainer with optional separate critic support."""
+class IACTrainer:
+    """Independent Actor-Critic trainer with optional separate critic support."""
 
     def __init__(
         self,
@@ -107,7 +109,7 @@ class IPPOTrainer:
         reward_func: Optional[RewardFunc] = None,
         reward_processor: Optional[Callable[[float], float]] = None,
         formatters: Optional[Union[Formatter, Sequence[Formatter]]] = None,
-        args: Optional[IPPOConfig] = None,
+        args: Optional[IACConfig] = None,
         train_dataset: Optional[Union[Dataset, IterableDataset]] = None,
         eval_dataset: Optional[Union[Dataset, IterableDataset]] = None,
         model_config: Optional[Dict[str, Any]] = None,
@@ -117,7 +119,7 @@ class IPPOTrainer:
         if reward_func is None or not callable(reward_func):
             raise ValueError("A callable reward_func must be provided.")
 
-        self.args = args if args is not None else IPPOConfig()
+        self.args = args if args is not None else IACConfig()
         self.reward_func = reward_func
         self.reward_processor = reward_processor or (lambda x: x)
         self.train_dataset = train_dataset
@@ -151,7 +153,7 @@ class IPPOTrainer:
 
         if self.args.num_agents > 1 and isinstance(model, PreTrainedModel):
             raise ValueError(
-                "Multi-agent IPPO requires `model` to be a pretrained identifier string."
+                "Multi-agent IAC requires `model` to be a pretrained identifier string."
             )
 
         for _ in range(self.args.num_agents):
@@ -169,7 +171,7 @@ class IPPOTrainer:
                 critic_identifier, PreTrainedModel
             ):
                 raise ValueError(
-                    "Multi-agent IPPO requires string identifiers for separate critics."
+                    "Multi-agent IAC requires string identifiers for separate critics."
                 )
             for _ in range(self.args.num_agents):
                 critic_model = self._load_critic_model(critic_identifier)
@@ -336,9 +338,9 @@ class IPPOTrainer:
         if wandb is None:
             raise RuntimeError("wandb is not installed but wandb_config was provided.")
 
-        project = self.wandb_config.get("project", "comlrl-ippo")
+        project = self.wandb_config.get("project", "comlrl-iac")
         entity = self.wandb_config.get("entity")
-        name = self.wandb_config.get("name", "ippo-run")
+        name = self.wandb_config.get("name", "iac-run")
         wandb_dir = self.wandb_config.get("dir")
 
         init_kwargs: Dict[str, Any] = {
@@ -450,7 +452,7 @@ class IPPOTrainer:
         if len(processed) == num_agents:
             return processed
         raise ValueError(
-            f"Reward function must return either 1 or {num_agents} values per prompt for multi-agent IPPO."
+            f"Reward function must return either 1 or {num_agents} values per prompt for multi-agent IAC."
         )
 
     # --------------------------------------------------------------------- #
