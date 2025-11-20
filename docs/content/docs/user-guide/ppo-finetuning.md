@@ -4,7 +4,7 @@ weight: 3
 math: true
 ---
 
-PPO is a widely used policy gradient method that employs generalized advantage estimation to estimate advantages, reducing the high variance and long rollout times in Monte Carlo methods, e.g., REINFORCE. PPO has also been used for LLM fine-tuning, e.g., [trl](https://huggingface.co/docs/trl/main/en/ppo_trainer), [verl](https://verl.readthedocs.io/en/latest/algo/ppo.html), [LLaMA Factory](https://llamafactory.readthedocs.io/en/latest/advanced/trainers.html#ppo).
+Actor-Critic methods are widely used policy gradient approaches that employ generalized advantage estimation to estimate advantages, reducing the high variance and long rollout times in Monte Carlo methods, e.g., REINFORCE. Many LLM fine-tuning frameworks implement actor-critic training (e.g., [trl](https://huggingface.co/docs/trl/main/en/ppo_trainer), [verl](https://verl.readthedocs.io/en/latest/algo/ppo.html), [LLaMA Factory](https://llamafactory.readthedocs.io/en/latest/advanced/trainers.html#ppo)).
 
 ## IAC
 
@@ -32,7 +32,7 @@ CoMLRL supports two IAC architectures for critic implementation:
 - `adam_beta1`, `adam_beta2`, `adam_epsilon`: Adam optimizer parameters
 - `max_grad_norm`: Maximum gradient norm for clipping
 - `rollout_buffer_size`: Number of samples to collect before update
-- `mini_batch_size`: Mini-batch size for PPO updates
+- `mini_batch_size`: Mini-batch size for policy updates
 - `ppo_epochs`: Number of optimization epochs per rollout
 - `value_clip_range`: Clipping range for value function
 - `value_loss_coef`: Coefficient for value loss
