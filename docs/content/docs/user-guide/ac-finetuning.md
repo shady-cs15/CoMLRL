@@ -71,7 +71,7 @@ CoMLRL supports two IAC architectures for critic implementation:
 {{% /hint %}}
 
 {{% hint warning %}}
-CoMLRL implements on-policy IAC, which computes the policy gradient using the current policy's samples without importance sampling or ratio clipping.
+For simplicity, IAC computes the policy gradient using the current policy's samples without importance sampling or ratio clipping.
 {{% /hint %}}
 
 {{% hint warning %}}

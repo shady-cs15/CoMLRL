@@ -67,7 +67,7 @@ J(\theta_i) = \mathbb{E}_{\mathbf{o}_0 \sim \mathcal{D}, \mathbf{h}^\mathcal{G} 
 {{% /hint %}}
 
 {{% hint warning %}}
-CoMLRL implements on-policy GRPO, which computes the policy gradient using the current policy's samples without importance sampling or ratio clipping.
+For simplicity, MAGRPO computes the policy gradient using the current policy's samples without importance sampling or ratio clipping.
 {{% /hint %}}
 
 {{% hint warning %}}

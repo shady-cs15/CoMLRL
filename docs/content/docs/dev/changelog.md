@@ -7,7 +7,7 @@ weight: 3
 
 ## Version 1.2.7
 
-Change the IPPOTrainer to be IACTrainer, since the actor-critic method we used is on-policy.
+Change the IPPOTrainer to be IACTrainer.
 
 ## Version 1.2.6
 
