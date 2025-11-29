@@ -5,7 +5,7 @@ weight: 3
 
 ---
 
-## Version 1.2.7
+## Version 1.2.8
 
 The critic in IACTrainer now estimate V rather than Q.
 
