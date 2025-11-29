@@ -11,7 +11,7 @@ Thanks for your interest in helping shape CoMLRL! This guide walks you through r
 
 Provide as much context as possible:
 
-- Environment (`python --version`, `torch --version`, GPU/CPU info).
+- Environment (`python --version`, `torch --version`, CUDA info).
 - Exact commands and minimal repro cases.
 - Logs, stack traces, or screenshots.
 
