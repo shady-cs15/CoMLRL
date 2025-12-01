@@ -5,6 +5,10 @@ weight: 3
 
 ---
 
+## Version 1.2.9
+
+Add MAACTrainer (separated centralized critic), now both IACTrainer and MAACTrainer can support single-turn training.
+
 ## Version 1.2.8
 
 The critic in IACTrainer now estimate V rather than Q.
