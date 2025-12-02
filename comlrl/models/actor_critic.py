@@ -82,12 +82,10 @@ class CausalLMWithValueHead(nn.Module):
         self.value_head: Optional[ValueHead]
         if attach_value_head:
             self.value_head = ValueHead(hidden_size, value_head_hidden_dim)
-            # Align value head dtype with backbone to avoid mixed-precision mismatches.
-            try:
-                base_dtype = next(base_model.parameters()).dtype
+            base_params = list(base_model.parameters())
+            if base_params:
+                base_dtype = base_params[0].dtype
                 self.value_head.to(dtype=base_dtype)
-            except StopIteration:
-                pass
         else:
             self.value_head = None
 
