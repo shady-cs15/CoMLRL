@@ -61,6 +61,7 @@ class MAACConfig:
     early_termination_threshold: Optional[float] = -0.2
     eval_interval: int = 16
     eval_num_samples: int = 4
+    logging_steps: int = 1
 
     def __post_init__(self) -> None:
         if self.rollout_buffer_size < 1:
@@ -87,6 +88,8 @@ class MAACConfig:
             raise ValueError("eval_interval must be >= 0.")
         if self.eval_num_samples < 1:
             raise ValueError("eval_num_samples must be >= 1.")
+        if self.logging_steps < 1:
+            raise ValueError("logging_steps must be >= 1.")
 
 
 class MAACTrainer:
@@ -184,6 +187,7 @@ class MAACTrainer:
         self.wandb_config = wandb_config
         self.wandb_initialized = False
         self.env_step = 0
+        self._last_train_log_step = -1
         if wandb_config is not None:
             self._init_wandb()
 
@@ -1121,6 +1125,19 @@ class MAACTrainer:
         if self.wandb_initialized and wandb is not None:
             wandb.log(metrics, step=self.env_step)
 
+    def _should_log_train(self) -> bool:
+        interval = int(getattr(self.args, "logging_steps", 1))
+        if interval <= 1:
+            self._last_train_log_step = self.env_step
+            return True
+        if (
+            self._last_train_log_step < 0
+            or (self.env_step - self._last_train_log_step) >= interval
+        ):
+            self._last_train_log_step = self.env_step
+            return True
+        return False
+
     def _process_buffer(
         self,
         agent_idx: int,
@@ -1149,7 +1166,8 @@ class MAACTrainer:
             for key, value in tagged.items():
                 epoch_metrics[key].append(value)
 
-        self._log_metrics(combined_log)
+        if combined_log and self._should_log_train():
+            self._log_metrics(combined_log)
 
     def save_model(self, output_dir: str) -> None:
         os.makedirs(output_dir, exist_ok=True)

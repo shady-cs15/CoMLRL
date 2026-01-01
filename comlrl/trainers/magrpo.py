@@ -195,6 +195,7 @@ class MAGRPOTrainer:
         # Training arguments
         self.args = args if args is not None else MAGRPOConfig()
         self.env_step = 0
+        self._last_train_log_step = -1
 
         # Reward and formatting
         self._setup_formatters(formatters, num_agents)
@@ -1459,6 +1460,19 @@ class MAGRPOTrainer:
         if len(buffer) >= int(self.args.rollout_buffer_size):
             self._process_buffer(agent_idx, buffer)
 
+    def _should_log_train(self, step: int) -> bool:
+        interval = int(getattr(self.args, "logging_steps", 1))
+        if interval <= 1:
+            self._last_train_log_step = step
+            return True
+        if (
+            self._last_train_log_step < 0
+            or (step - self._last_train_log_step) >= interval
+        ):
+            self._last_train_log_step = step
+            return True
+        return False
+
     def _process_buffer(self, agent_idx: int, buffer: List[NodeSample]) -> None:
         if not buffer:
             return
@@ -1480,7 +1494,8 @@ class MAGRPOTrainer:
                     np.mean([s.node_mean_return for s in samples])
                 )
                 step = max(s.node_env_step for s in samples)
-                wandb.log(batch_log, step=step)
+                if self._should_log_train(step):
+                    wandb.log(batch_log, step=step)
 
     def _update_from_samples(self, agent_idx: int, samples: List[NodeSample]) -> None:
         if not samples:
