@@ -1483,11 +1483,11 @@ class MAGRPOTrainer:
             t_idx = int(sample.turn_idx)
             turn_groups.setdefault(t_idx, []).append(sample)
         buffer.clear()
+        batch_log: Dict[str, Any] = {}
         for t_idx in sorted(turn_groups.keys()):
             samples = turn_groups[t_idx]
             self._update_from_samples(agent_idx, samples)
             if self.wandb_initialized and wandb.run is not None and samples:
-                batch_log: Dict[str, Any] = {}
                 prefix = f"turn_{t_idx + 1}/"
                 batch_log[prefix + "reward_mean"] = float(
                     np.mean([s.node_mean_reward for s in samples])
@@ -1495,9 +1495,10 @@ class MAGRPOTrainer:
                 batch_log[prefix + "expected_return"] = float(
                     np.mean([s.node_mean_return for s in samples])
                 )
-                step = self.global_step
-                if self._should_log_train(step):
-                    wandb.log(batch_log, step=step)
+        if self.wandb_initialized and wandb.run is not None and batch_log:
+            step = self.global_step
+            if self._should_log_train(step):
+                wandb.log(batch_log, step=step)
 
     def _update_from_samples(self, agent_idx: int, samples: List[NodeSample]) -> None:
         if not samples:
