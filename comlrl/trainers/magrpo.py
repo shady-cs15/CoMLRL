@@ -1,6 +1,7 @@
 import inspect
 import os
 import random
+import time
 from dataclasses import dataclass, field
 import itertools
 from typing import Any, Callable, Dict, List, Optional, Union, Tuple
@@ -541,6 +542,7 @@ class MAGRPOTrainer:
         all_test_cases = []
         all_entry_points = []
         all_prompts = []
+        all_eval_sample_stats: List[Dict[str, Any]] = []
         # Collect per-turn immediate rewards across evaluated samples
         eval_turn_rewards: List[List[float]] = [[] for _ in range(self.args.num_turns)]
         # No per-function tracking; single reward function handles composition
@@ -549,6 +551,8 @@ class MAGRPOTrainer:
         eval_dataloader = self.get_eval_dataloader()
 
         # Evaluate on specified number of samples
+        eval_total_tokens = 0
+        eval_total_time_s = 0.0
         with torch.no_grad():
             for eval_idx, batch in enumerate(eval_dataloader):
                 if eval_idx >= num_eval_samples:
@@ -564,10 +568,21 @@ class MAGRPOTrainer:
                         all_entry_points,
                         all_prompts,
                         eval_turn_rewards,
+                        all_eval_sample_stats,
                     )
+                    if all_eval_sample_stats:
+                        latest = all_eval_sample_stats[-1]
+                        eval_total_tokens += int(latest.get("total_tokens", 0))
+                        eval_total_time_s += float(latest.get("total_time_s", 0.0))
 
         # Prepare extra metrics to pass into logging after computing returns/components
         extra_eval_metrics: Dict[str, Any] = {}
+        if eval_total_time_s > 0:
+            extra_eval_metrics["eval/tokens_per_s"] = float(
+                eval_total_tokens / eval_total_time_s
+            )
+        extra_eval_metrics["eval/total_tokens"] = float(eval_total_tokens)
+        extra_eval_metrics["eval/total_time_s"] = float(eval_total_time_s)
 
         # Compute eval returns per turn and add to extra metrics
         n_turns = self.args.num_turns
@@ -644,12 +659,21 @@ class MAGRPOTrainer:
                     "test_code",
                     "num_agents",
                     "num_turns",
+                    "total_tokens",
+                    "total_time_s",
+                    "tokens_per_s",
                     "success",
                 ]
                 for t in range(num_turns):
+                    columns.append(f"turn_{t+1}/total_tokens")
+                    columns.append(f"turn_{t+1}/total_time_s")
+                    columns.append(f"turn_{t+1}/tokens_per_s")
                     for a in range(num_agents):
                         columns.append(f"turn_{t+1}/agent_{a+1}_prompt")
                         columns.append(f"turn_{t+1}/agent_{a+1}_completion")
+                        columns.append(f"turn_{t+1}/agent_{a+1}_tokens")
+                        columns.append(f"turn_{t+1}/agent_{a+1}_time_s")
+                        columns.append(f"turn_{t+1}/agent_{a+1}_tokens_per_s")
                     columns.append(f"turn_{t+1}/reward")
                     columns.append(f"turn_{t+1}/return")
                 for k in metric_keys:
@@ -664,6 +688,9 @@ class MAGRPOTrainer:
                         "test_code": all_test_cases[s] if s < len(all_test_cases) else None,
                         "num_agents": num_agents,
                         "num_turns": num_turns,
+                        "total_tokens": None,
+                        "total_time_s": None,
+                        "tokens_per_s": None,
                         "success": None,
                     }
                     # Per-turn rewards and returns
@@ -680,11 +707,28 @@ class MAGRPOTrainer:
                             running = float(rewards[t]) + gamma * running
                             returns[t] = running
 
+                    # Per-sample timing/tokens
+                    if s < len(all_eval_sample_stats):
+                        stats = all_eval_sample_stats[s]
+                        row["total_tokens"] = stats.get("total_tokens")
+                        row["total_time_s"] = stats.get("total_time_s")
+                        row["tokens_per_s"] = stats.get("tokens_per_s")
+                        per_turn = stats.get("per_turn", {})
+                    else:
+                        per_turn = {}
+
                     # Prompts/completions per agent/turn
                     for t in range(num_turns):
+                        turn_stats = per_turn.get(t, {})
+                        row[f"turn_{t+1}/total_tokens"] = turn_stats.get("total_tokens")
+                        row[f"turn_{t+1}/total_time_s"] = turn_stats.get("total_time_s")
+                        row[f"turn_{t+1}/tokens_per_s"] = turn_stats.get("tokens_per_s")
                         for a in range(num_agents):
                             p_key = f"turn_{t+1}/agent_{a+1}_prompt"
                             c_key = f"turn_{t+1}/agent_{a+1}_completion"
+                            tok_key = f"turn_{t+1}/agent_{a+1}_tokens"
+                            time_key = f"turn_{t+1}/agent_{a+1}_time_s"
+                            tps_key = f"turn_{t+1}/agent_{a+1}_tokens_per_s"
                             prompt_val = None
                             comp_val = None
                             if a < len(all_agent_prompts_turns) and s < len(all_agent_prompts_turns[a]):
@@ -697,6 +741,10 @@ class MAGRPOTrainer:
                                     comp_val = ch[t]
                             row[p_key] = prompt_val
                             row[c_key] = comp_val
+                            agent_stats = turn_stats.get("per_agent", {}).get(a, {})
+                            row[tok_key] = agent_stats.get("tokens")
+                            row[time_key] = agent_stats.get("time_s")
+                            row[tps_key] = agent_stats.get("tokens_per_s")
                         row[f"turn_{t+1}/reward"] = rewards[t]
                         row[f"turn_{t+1}/return"] = returns[t]
 
@@ -728,6 +776,7 @@ class MAGRPOTrainer:
         all_entry_points,
         all_prompts,
         eval_turn_rewards,
+        all_eval_sample_stats,
         # no per-function component tracking
     ):
         """Evaluate a single sample for any number of turns."""
@@ -746,9 +795,13 @@ class MAGRPOTrainer:
         eval_response_history = [[] for _ in range(self.num_agents)]
 
         # Run episode with configured number of turns
+        sample_total_tokens = 0
+        sample_total_time_s = 0.0
+        per_turn_stats: Dict[int, Dict[str, Any]] = {}
         for turn_idx in range(self.args.num_turns):
             # Prepare external prompts for turns after the first
             agent_external_prompts = [None] * self.num_agents
+            per_turn_stats[turn_idx] = {"per_agent": {}}
 
             if turn_idx > 0 and all(c is not None for c in previous_turn_completions):
                 # Use previously selected completions to form next-turn prompts (single eval path)
@@ -780,6 +833,7 @@ class MAGRPOTrainer:
 
             # Generate and extract one completion from each agent for evaluation
             for agent_idx in range(self.num_agents):
+                start_t = time.perf_counter()
                 agent_completions = self._generate_completions_with_external_prompts(
                     self.agents[agent_idx],
                     [batch_item],
@@ -789,12 +843,29 @@ class MAGRPOTrainer:
                     external_prompts=agent_external_prompts[agent_idx],
                     do_sample=True,
                 )
+                end_t = time.perf_counter()
                 # Extract the completion directly
                 completion = agent_completions["completions"][0][0]
                 # Record prompt used this turn
                 used_prompt = agent_completions["prompts"][0]
                 eval_prompt_history[agent_idx].append(used_prompt)
                 agent_sample_completions[agent_idx].append(completion)
+                # Token counts from completion_input_ids (generated tokens only)
+                token_count = 0
+                try:
+                    completion_ids = agent_completions.get("completion_input_ids", [])
+                    if completion_ids and completion_ids[0]:
+                        token_count = int(sum(len(t) for t in completion_ids[0]))
+                except Exception:
+                    token_count = 0
+                elapsed = float(end_t - start_t)
+                sample_total_tokens += token_count
+                sample_total_time_s += elapsed
+                per_turn_stats[turn_idx]["per_agent"][agent_idx] = {
+                    "tokens": token_count,
+                    "time_s": elapsed,
+                    "tokens_per_s": (token_count / elapsed) if elapsed > 0 else None,
+                }
 
             # Compute immediate reward at this turn (single joint sample)
             agent_completions_for_reward = [
@@ -812,6 +883,20 @@ class MAGRPOTrainer:
                     chosen = agent_sample_completions[agent_idx][-1]
                     previous_turn_completions[agent_idx] = chosen
                     eval_response_history[agent_idx].append(chosen)
+            # Per-turn aggregate tokens/time
+            turn_tokens = sum(
+                per_turn_stats[turn_idx]["per_agent"][a].get("tokens", 0)
+                for a in range(self.num_agents)
+            )
+            turn_time = sum(
+                per_turn_stats[turn_idx]["per_agent"][a].get("time_s", 0.0)
+                for a in range(self.num_agents)
+            )
+            per_turn_stats[turn_idx]["total_tokens"] = int(turn_tokens)
+            per_turn_stats[turn_idx]["total_time_s"] = float(turn_time)
+            per_turn_stats[turn_idx]["tokens_per_s"] = (
+                float(turn_tokens / turn_time) if turn_time > 0 else None
+            )
 
         # Store completions and prompts for all agents
         for agent_idx in range(self.num_agents):
@@ -821,6 +906,17 @@ class MAGRPOTrainer:
             all_agent_prompts_turns[agent_idx].append(
                 list(eval_prompt_history[agent_idx])
             )
+        # Store per-sample timing/token stats
+        all_eval_sample_stats.append(
+            {
+                "total_tokens": int(sample_total_tokens),
+                "total_time_s": float(sample_total_time_s),
+                "tokens_per_s": float(sample_total_tokens / sample_total_time_s)
+                if sample_total_time_s > 0
+                else None,
+                "per_turn": per_turn_stats,
+            }
+        )
 
     def _log_eval_metrics(
         self,
@@ -920,6 +1016,21 @@ class MAGRPOTrainer:
                     epoch_turn_returns,
                     **kwargs,
                 )
+                if (
+                    self.wandb_initialized
+                    and wandb.run is not None
+                    and isinstance(_batch_stats, dict)
+                    and _batch_stats
+                ):
+                    speed_log = {}
+                    if "tokens_per_s" in _batch_stats:
+                        speed_log["train/tokens_per_s"] = _batch_stats["tokens_per_s"]
+                    if "total_tokens" in _batch_stats:
+                        speed_log["train/total_tokens"] = _batch_stats["total_tokens"]
+                    if "total_time_s" in _batch_stats:
+                        speed_log["train/total_time_s"] = _batch_stats["total_time_s"]
+                    if speed_log and self._should_log_train(self.batch_step):
+                        wandb.log(speed_log, step=self.batch_step)
 
             for agent_idx, buffer in enumerate(self.rollout_buffers):
                 if buffer:
@@ -965,6 +1076,8 @@ class MAGRPOTrainer:
         turn_return_node_means: List[List[float]] = [[] for _ in range(num_turns)]
         # No per-function accumulation in single reward mode
         turn_node_counts: List[int] = [0 for _ in range(num_turns)]
+        batch_gen_tokens = 0
+        batch_gen_time_s = 0.0
 
         def build_node(
             turn_idx: int,
@@ -974,6 +1087,7 @@ class MAGRPOTrainer:
         ):
             comps_per_agent = []
             for agent_idx in range(self.num_agents):
+                start_t = time.perf_counter()
                 comps = self._generate_completions_with_external_prompts(
                     self.agents[agent_idx],
                     [batch_item],
@@ -985,6 +1099,14 @@ class MAGRPOTrainer:
                     ),
                     **kwargs,
                 )
+                end_t = time.perf_counter()
+                try:
+                    completion_ids = comps.get("completion_input_ids", [])
+                    if completion_ids and completion_ids[0]:
+                        batch_gen_tokens += int(sum(len(t) for t in completion_ids[0]))
+                except Exception:
+                    pass
+                batch_gen_time_s += float(end_t - start_t)
                 comps_per_agent.append(comps)
 
             agent_completions_list = [
@@ -1240,6 +1362,10 @@ class MAGRPOTrainer:
             # No per-reward-function means; use a single reward function
             batch_stats[t] = stats
 
+        if batch_gen_time_s > 0:
+            batch_stats["tokens_per_s"] = float(batch_gen_tokens / batch_gen_time_s)
+        batch_stats["total_tokens"] = float(batch_gen_tokens)
+        batch_stats["total_time_s"] = float(batch_gen_time_s)
         return batch_loss, batch_stats
 
     def _generate_completions(
