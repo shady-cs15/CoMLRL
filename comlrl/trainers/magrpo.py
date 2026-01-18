@@ -199,6 +199,9 @@ class MAGRPOTrainer:
         self.env_step = 0
         self.batch_step = 0
         self._last_train_log_step = -1
+        # Persistent eval diagnostics table (appends across eval steps)
+        self._eval_table = None
+        self._eval_table_columns: Optional[List[str]] = None
 
         # Reward and formatting
         self._setup_formatters(formatters, num_agents)
@@ -653,6 +656,7 @@ class MAGRPOTrainer:
                     metric_keys = sorted(keys)
 
                 columns = [
+                    "batch_step",
                     "sample_id",
                     "entry_point",
                     "prompt",
@@ -679,9 +683,13 @@ class MAGRPOTrainer:
                 for k in metric_keys:
                     columns.append(f"metric/{k}")
 
-                table = wandb.Table(columns=columns)
+                if self._eval_table is None or self._eval_table_columns != columns:
+                    self._eval_table = wandb.Table(columns=columns)
+                    self._eval_table_columns = list(columns)
+                table = self._eval_table
                 for s in range(n_samples):
                     row = {
+                        "batch_step": self.batch_step,
                         "sample_id": s,
                         "entry_point": all_entry_points[s] if s < len(all_entry_points) else None,
                         "prompt": all_prompts[s] if s < len(all_prompts) else None,
