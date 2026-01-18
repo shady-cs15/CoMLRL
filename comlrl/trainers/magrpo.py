@@ -535,8 +535,9 @@ class MAGRPOTrainer:
         if self.eval_dataset is None:
             return {}
 
-        # Storage for completions across turns for all agents
+        # Storage for completions/prompts across turns for all agents
         all_agent_completions_turns = [[] for _ in range(self.num_agents)]
+        all_agent_prompts_turns = [[] for _ in range(self.num_agents)]
         all_test_cases = []
         all_entry_points = []
         all_prompts = []
@@ -558,6 +559,7 @@ class MAGRPOTrainer:
                     self._evaluate_sample(
                         batch_item,
                         all_agent_completions_turns,
+                        all_agent_prompts_turns,
                         all_test_cases,
                         all_entry_points,
                         all_prompts,
@@ -595,19 +597,133 @@ class MAGRPOTrainer:
         # No per-reward-function logging when using a single reward function
 
         # Calculate and log metrics (including extra_eval_metrics)
+        detailed_metrics = None
+        if self.eval_logger is not None:
+            detailed_metrics = self.eval_logger(
+                agent_completions_turns=all_agent_completions_turns,
+                test_cases=all_test_cases,
+                entry_points=all_entry_points,
+                prompts=all_prompts,
+            )
+
         eval_metrics = self._log_eval_metrics(
             all_agent_completions_turns,
             all_test_cases,
             all_entry_points,
             all_prompts,
             extra_metrics=extra_eval_metrics,
+            detailed_metrics=detailed_metrics,
         )
+        # Optional qualitative table logging for eval rollouts
+        if self.wandb_initialized and wandb.run is not None:
+            log_eval_table = True
+            if isinstance(self.wandb_config, dict):
+                log_eval_table = bool(self.wandb_config.get("log_eval_table", True))
+            if log_eval_table:
+                num_turns = int(self.args.num_turns)
+                num_agents = int(self.num_agents)
+                n_samples = len(all_test_cases)
+                gamma = float(getattr(self.args, "discount", 0.9))
+
+                # Collect union of per-sample metric keys
+                metric_keys = []
+                if isinstance(detailed_metrics, list) and detailed_metrics:
+                    keys = set()
+                    for m in detailed_metrics:
+                        if isinstance(m, dict):
+                            keys.update(m.keys())
+                    # Avoid duplication with base columns
+                    keys.discard("sample_id")
+                    keys.discard("entry_point")
+                    metric_keys = sorted(keys)
+
+                columns = [
+                    "sample_id",
+                    "entry_point",
+                    "prompt",
+                    "test_code",
+                    "num_agents",
+                    "num_turns",
+                    "success",
+                ]
+                for t in range(num_turns):
+                    for a in range(num_agents):
+                        columns.append(f"turn_{t+1}/agent_{a+1}_prompt")
+                        columns.append(f"turn_{t+1}/agent_{a+1}_completion")
+                    columns.append(f"turn_{t+1}/reward")
+                    columns.append(f"turn_{t+1}/return")
+                for k in metric_keys:
+                    columns.append(f"metric/{k}")
+
+                table = wandb.Table(columns=columns)
+                for s in range(n_samples):
+                    row = {
+                        "sample_id": s,
+                        "entry_point": all_entry_points[s] if s < len(all_entry_points) else None,
+                        "prompt": all_prompts[s] if s < len(all_prompts) else None,
+                        "test_code": all_test_cases[s] if s < len(all_test_cases) else None,
+                        "num_agents": num_agents,
+                        "num_turns": num_turns,
+                        "success": None,
+                    }
+                    # Per-turn rewards and returns
+                    rewards = []
+                    for t in range(num_turns):
+                        if t < len(eval_turn_rewards) and s < len(eval_turn_rewards[t]):
+                            rewards.append(float(eval_turn_rewards[t][s]))
+                        else:
+                            rewards.append(None)
+                    returns = [None] * num_turns
+                    if all(r is not None for r in rewards):
+                        running = 0.0
+                        for t in reversed(range(num_turns)):
+                            running = float(rewards[t]) + gamma * running
+                            returns[t] = running
+
+                    # Prompts/completions per agent/turn
+                    for t in range(num_turns):
+                        for a in range(num_agents):
+                            p_key = f"turn_{t+1}/agent_{a+1}_prompt"
+                            c_key = f"turn_{t+1}/agent_{a+1}_completion"
+                            prompt_val = None
+                            comp_val = None
+                            if a < len(all_agent_prompts_turns) and s < len(all_agent_prompts_turns[a]):
+                                ph = all_agent_prompts_turns[a][s]
+                                if t < len(ph):
+                                    prompt_val = ph[t]
+                            if a < len(all_agent_completions_turns) and s < len(all_agent_completions_turns[a]):
+                                ch = all_agent_completions_turns[a][s]
+                                if t < len(ch):
+                                    comp_val = ch[t]
+                            row[p_key] = prompt_val
+                            row[c_key] = comp_val
+                        row[f"turn_{t+1}/reward"] = rewards[t]
+                        row[f"turn_{t+1}/return"] = returns[t]
+
+                    # Per-sample detailed metrics
+                    if isinstance(detailed_metrics, list) and s < len(detailed_metrics):
+                        sample_metrics = detailed_metrics[s]
+                        if isinstance(sample_metrics, dict):
+                            # Success: passed_rate == 1.0 on final turn when available
+                            success_key = f"turn_{num_turns}/passed_rate"
+                            if success_key in sample_metrics:
+                                try:
+                                    row["success"] = float(sample_metrics[success_key]) >= 1.0
+                                except Exception:
+                                    row["success"] = None
+                            for k in metric_keys:
+                                row[f"metric/{k}"] = sample_metrics.get(k)
+
+                    table.add_data(*[row.get(col) for col in columns])
+
+                wandb.log({"eval/rollout_table": table}, step=self.batch_step)
         return eval_metrics
 
     def _evaluate_sample(
         self,
         batch_item,
         all_agent_completions_turns,
+        all_agent_prompts_turns,
         all_test_cases,
         all_entry_points,
         all_prompts,
@@ -697,10 +813,13 @@ class MAGRPOTrainer:
                     previous_turn_completions[agent_idx] = chosen
                     eval_response_history[agent_idx].append(chosen)
 
-        # Store completions for all agents
+        # Store completions and prompts for all agents
         for agent_idx in range(self.num_agents):
             all_agent_completions_turns[agent_idx].append(
                 agent_sample_completions[agent_idx]
+            )
+            all_agent_prompts_turns[agent_idx].append(
+                list(eval_prompt_history[agent_idx])
             )
 
     def _log_eval_metrics(
@@ -710,13 +829,15 @@ class MAGRPOTrainer:
         all_entry_points,
         all_prompts,
         extra_metrics: Optional[Dict[str, Any]] = None,
+        detailed_metrics: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, float]:
         """Log evaluation metrics for any number of turns."""
         eval_metrics = {}
 
         # Detailed logging (if logger is provided), standardized to modern interface
         if (
-            self.eval_logger is not None
+            detailed_metrics is None
+            and self.eval_logger is not None
             and self.eval_aggregator is not None
             and all_agent_completions_turns
             and all(agent_comps for agent_comps in all_agent_completions_turns)
