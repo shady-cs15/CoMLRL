@@ -194,7 +194,9 @@ class MAGRPOTrainer:
 
         # Training arguments
         self.args = args if args is not None else MAGRPOConfig()
+        # env_step tracks rollout samples; global_step tracks optimizer updates
         self.env_step = 0
+        self.global_step = 0
         self._last_train_log_step = -1
 
         # Reward and formatting
@@ -740,7 +742,7 @@ class MAGRPOTrainer:
 
         # Log evaluation metrics
         if self.wandb_initialized and wandb.run is not None:
-            wandb.log(eval_metrics, step=self.env_step)
+            wandb.log(eval_metrics, step=self.global_step)
 
         return eval_metrics
 
@@ -814,7 +816,7 @@ class MAGRPOTrainer:
                             np.mean(epoch_turn_returns[turn_idx])
                         )
                 if epoch_log:
-                    wandb.log(epoch_log, step=self.env_step)
+                    wandb.log(epoch_log, step=self.global_step)
 
     def _train_step_returns(
         self,
@@ -1493,7 +1495,7 @@ class MAGRPOTrainer:
                 batch_log[prefix + "expected_return"] = float(
                     np.mean([s.node_mean_return for s in samples])
                 )
-                step = max(s.node_env_step for s in samples)
+                step = self.global_step
                 if self._should_log_train(step):
                     wandb.log(batch_log, step=step)
 
@@ -1511,6 +1513,7 @@ class MAGRPOTrainer:
             )
             (loss * scale).backward()
         self.optimizers[agent_idx].step()
+        self.global_step += 1
 
     def _compute_loss_with_gradients(self, agent, completions_data, returns):
         """
