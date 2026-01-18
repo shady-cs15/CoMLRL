@@ -998,8 +998,8 @@ class MAGRPOTrainer:
             else:
                 it = enumerate(dl)
             for batch_idx, batch in it:
-                # 1-based batch update step for logging
-                self.batch_step = int(batch_idx) + 1
+                # Monotonic batch update step across epochs for logging
+                self.batch_step += 1
                 # Periodic evaluation based on configuration
                 if int(self.args.eval_interval) > 0 and (
                     batch_idx % int(self.args.eval_interval) == 0
