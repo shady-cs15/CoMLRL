@@ -194,9 +194,9 @@ class MAGRPOTrainer:
 
         # Training arguments
         self.args = args if args is not None else MAGRPOConfig()
-        # env_step tracks rollout samples; global_step tracks optimizer updates
+        # env_step tracks rollout samples; batch_step tracks batch updates
         self.env_step = 0
-        self.global_step = 0
+        self.batch_step = 0
         self._last_train_log_step = -1
 
         # Reward and formatting
@@ -742,7 +742,7 @@ class MAGRPOTrainer:
 
         # Log evaluation metrics
         if self.wandb_initialized and wandb.run is not None:
-            wandb.log(eval_metrics, step=self.global_step)
+            wandb.log(eval_metrics, step=self.batch_step)
 
         return eval_metrics
 
@@ -781,6 +781,8 @@ class MAGRPOTrainer:
             else:
                 it = enumerate(dl)
             for batch_idx, batch in it:
+                # 1-based batch update step for logging
+                self.batch_step = int(batch_idx) + 1
                 # Periodic evaluation based on configuration
                 if int(self.args.eval_interval) > 0 and (
                     batch_idx % int(self.args.eval_interval) == 0
@@ -816,7 +818,7 @@ class MAGRPOTrainer:
                             np.mean(epoch_turn_returns[turn_idx])
                         )
                 if epoch_log:
-                    wandb.log(epoch_log, step=self.global_step)
+                    wandb.log(epoch_log, step=self.batch_step)
 
     def _train_step_returns(
         self,
@@ -1496,7 +1498,7 @@ class MAGRPOTrainer:
                     np.mean([s.node_mean_return for s in samples])
                 )
         if self.wandb_initialized and wandb.run is not None and batch_log:
-            step = self.global_step
+            step = self.batch_step
             if self._should_log_train(step):
                 wandb.log(batch_log, step=step)
 
@@ -1514,7 +1516,6 @@ class MAGRPOTrainer:
             )
             (loss * scale).backward()
         self.optimizers[agent_idx].step()
-        self.global_step += 1
 
     def _compute_loss_with_gradients(self, agent, completions_data, returns):
         """
