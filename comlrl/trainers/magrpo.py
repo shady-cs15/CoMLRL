@@ -684,7 +684,9 @@ class MAGRPOTrainer:
                     columns.append(f"metric/{k}")
 
                 if self._eval_table is None or self._eval_table_columns != columns:
-                    self._eval_table = wandb.Table(columns=columns)
+                    self._eval_table = wandb.Table(
+                        columns=columns, log_mode="MUTABLE"
+                    )
                     self._eval_table_columns = list(columns)
                 table = self._eval_table
                 for s in range(n_samples):
