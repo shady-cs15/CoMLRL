@@ -764,7 +764,7 @@ class MAGRPOTrainer:
 
                     table.add_data(*[row.get(col) for col in columns])
 
-                wandb.log({"eval/rollout_table": table}, step=self.batch_step)
+                wandb.log({"eval_diagnostics": table}, step=self.batch_step)
         return eval_metrics
 
     def _evaluate_sample(
@@ -945,8 +945,8 @@ class MAGRPOTrainer:
                 prompts=all_prompts,
             )
 
-            # Aggregate metrics for logging
-            # Aggregate strictly per-turn; aggregator already returns turn_k/* keys only
+        # Aggregate metrics for logging (if available)
+        if detailed_metrics is not None and self.eval_aggregator is not None:
             aggregated_detailed_metrics = self.eval_aggregator(
                 detailed_metrics, num_turns=self.args.num_turns
             )
