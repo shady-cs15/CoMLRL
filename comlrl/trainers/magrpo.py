@@ -1085,6 +1085,7 @@ class MAGRPOTrainer:
             prompt_history_per_agent: Optional[List[List[str]]] = None,
             response_history_per_agent: Optional[List[List[str]]] = None,
         ):
+            nonlocal batch_gen_tokens, batch_gen_time_s
             comps_per_agent = []
             for agent_idx in range(self.num_agents):
                 start_t = time.perf_counter()
